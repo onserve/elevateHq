@@ -35,8 +35,16 @@ export default {
       // Initial sign in - account and profile are available
       if (account && profile) {
         // Extract roles from Keycloak
+
+        // console.log('=== KEYCLOAK PROFILE DEBUG ===')
+        // console.log('Full profile:', JSON.stringify(profile, null, 2))
+        // console.log('realm_access:', (profile as any).realm_access)
+        // console.log('resource_access:', (profile as any).resource_access)
+        // console.log('=============================')
+
         const realmRoles = (profile as any).realm_access?.roles || [];
-        const clientRoles = (profile as any).resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles || [];
+        const clientRoles =
+          (profile as any).resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles || [];
         const roles = [...new Set([...realmRoles, ...clientRoles])];
 
         console.log('Extracted roles:', roles);
