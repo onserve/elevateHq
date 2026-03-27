@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Plus, Trash2, Calendar, Layout, BarChart3, MoreVertical } from 'lucide-react';
+import Link from 'next/link';
 import { useProjects, useDeleteProject } from '@/lib/query/use-projects';
 import { PaginatedResponse } from '@/lib/api/server-api-client';
 import { ProjectListview, Project } from '@/lib/api/service/project-service';
@@ -79,9 +80,13 @@ export function ProjectList({ initialData }: ProjectListProps) {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (
-          <div
+          <Link
             key={project.id}
-            className="group p-6 border border-border rounded-2xl bg-card shadow-sm hover:shadow-lg hover:border-accent/20 transition-all duration-200 cursor-pointer"
+            href={`/projects/${project.id}`}
+            className="group"
+          >
+          <div
+            className="p-6 border border-border rounded-2xl bg-card shadow-sm hover:shadow-lg hover:border-accent/20 transition-all duration-200 cursor-pointer h-full"
           >
             <div className="flex justify-between items-start mb-5">
               <div className="p-3 bg-accent/10 rounded-xl">
@@ -115,6 +120,7 @@ export function ProjectList({ initialData }: ProjectListProps) {
               </Button>
             </div>
           </div>
+          </Link>
           ))}
         </div>
       )}
