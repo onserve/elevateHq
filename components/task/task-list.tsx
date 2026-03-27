@@ -66,36 +66,27 @@ export function TaskList({ initialData }: TaskListProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Tasks</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage tasks across all projects</p>
-        </div>
-
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Task
-        </Button>
-      </div>
-
-      {/* Search */}
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
+    <div className="space-y-8">
+      {/* Search & Toolbar */}
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search tasks or projects..."
-            className="pl-10"
+            className="pl-11 h-11 bg-muted/50 border-0 rounded-lg"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <Button variant="outline">
+        <Button variant="outline" className="h-11">
           <Filter className="mr-2 h-4 w-4" />
           Filter
+        </Button>
+
+        <Button onClick={openCreate} className="h-11 px-6 ml-auto">
+          <Plus className="mr-2 h-4 w-4" />
+          New Task
         </Button>
       </div>
 
@@ -105,32 +96,32 @@ export function TaskList({ initialData }: TaskListProps) {
           filteredTasks.map((task) => (
             <div
               key={task.id}
-              className="group flex items-center justify-between p-4 border rounded-xl bg-card transition-shadow hover:shadow-sm"
+              className="group flex items-center justify-between p-5 border border-border rounded-xl bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all duration-200 cursor-pointer"
+              onClick={() => openEdit(task)}
             >
-              <div className="flex items-start gap-4 cursor-pointer" onClick={() => openEdit(task)}>
-                <div className="mt-1">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
+              <div className="flex items-start gap-4 flex-1 min-w-0">
+                <div className="mt-1 p-2 bg-accent/10 rounded-lg flex-shrink-0">
+                  <Clock className="h-5 w-5 text-accent" />
                 </div>
 
-                <div>
-                  <h3 className="font-medium text-foreground">{task.title}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground line-clamp-1">{task.title}</h3>
 
-                  <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
                     {task.projectName && (
-                      <span className="font-medium text-primary/80">{task.projectName}</span>
+                      <span className="font-medium text-accent/80">{task.projectName}</span>
                     )}
 
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
                       {task.dueDate || 'No date'}
                     </span>
 
                     <span
-                      className={`px-2 py-0.5 rounded-full font-medium ${getPriorityColor(
+                      className={`px-2.5 py-1 rounded-full text-xs font-bold ${getPriorityColor(
                         task.priority,
                       )}`}
                     >
-                      <Flag className="inline h-3 w-3 mr-1" />
                       {task.priority}
                     </span>
                   </div>
@@ -141,8 +132,9 @@ export function TaskList({ initialData }: TaskListProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => {
+                className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9 flex-shrink-0 ml-4"
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (confirm('Delete this task?')) {
                     deleteTask.mutate(task.id);
                   }
@@ -153,7 +145,8 @@ export function TaskList({ initialData }: TaskListProps) {
             </div>
           ))
         ) : (
-          <div className="py-20 text-center border-2 border-dashed rounded-xl">
+          <div className="py-20 text-center border-2 border-dashed rounded-2xl bg-muted/20">
+            <Clock className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">No tasks found matching your search.</p>
           </div>
         )}

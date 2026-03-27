@@ -103,7 +103,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           - Each page is also a Server Component by default
           - Can have its own loading.tsx and error.tsx
         */}
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1">{children}</main>
       </div>
 
       {/* 

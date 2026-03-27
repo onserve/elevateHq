@@ -34,18 +34,15 @@ export default async function ProjectsPage({
 
   return (
     <div className="min-h-full p-8">
-      {/* Page Header following established design patterns [6, 7] */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-foreground">Projects</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      {/* Page Header with improved spacing and hierarchy */}
+      <div className="mb-12">
+        <h1 className="text-4xl font-bold text-foreground mb-2">Projects</h1>
+        <p className="text-base text-muted-foreground">
           Manage and track all your projects and their associated goals
         </p>
       </div>
 
-      {/* 
-          Handoff the initial data to the interactive Client Component.
-          This ensures immediate rendering of content for the user [4, 8].
-      */}
+      {/* Handoff the initial data to the interactive Client Component */}
       <ProjectList initialData={initialData} />
     </div>
   );

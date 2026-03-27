@@ -41,62 +41,73 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="relative w-72">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="space-y-8">
+      <div className="flex items-center justify-between gap-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search goals..."
-            className="pl-10"
+            className="pl-11 h-11 bg-muted/50 border-0 rounded-lg"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="h-11 px-6">
           <Plus className="mr-2 h-4 w-4" /> New Goal
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {filteredGoals.map((goal) => (
+      {filteredGoals.length === 0 ? (
+        <div className="py-24 text-center border-2 border-dashed rounded-2xl bg-muted/20">
+          <Target className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+          <p className="text-muted-foreground mb-1">No goals found</p>
+          <p className="text-sm text-muted-foreground">
+            {searchQuery ? 'Try adjusting your search' : 'Create a new goal to start tracking'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {filteredGoals.map((goal) => (
           <div
             key={goal.id}
-            className="group flex items-center justify-between p-4 border rounded-xl bg-card hover:shadow-sm transition-all"
+            className="group flex items-center justify-between p-5 border border-border rounded-xl bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all duration-200"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Target className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div className="p-3 bg-accent/10 rounded-xl flex-shrink-0">
+                <Target className="h-5 w-5 text-accent" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h3
-                  className="font-medium cursor-pointer hover:underline"
+                  className="font-semibold text-foreground cursor-pointer hover:text-accent transition-colors truncate"
                   onClick={() => openEdit(goal)}
                 >
                   {goal.title}
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {goal.projectName || 'General Goal'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right mr-4">
-                <p className="text-sm font-semibold">
-                  {goal.currentValue} / {goal.targetValue} {goal.unit}
+            <div className="flex items-center gap-6 flex-shrink-0 ml-4">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-foreground">
+                  {goal.currentValue} / {goal.targetValue}
                 </p>
+                <p className="text-xs text-muted-foreground">{goal.unit}</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="opacity-0 group-hover:opacity-100 text-destructive"
+                className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9"
                 onClick={() => deleteGoal.mutate(goal.id)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[500px]">

@@ -173,4 +173,27 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Page Headers */
+  .page-header {
+    @apply mb-12;
+  }
+
+  .page-title {
+    @apply text-4xl font-bold text-foreground mb-2;
+  }
+
+  .page-subtitle {
+    @apply text-base text-muted-foreground;
+  }
+
+  /* Card Improvements */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:border-border/80;
+  }
+
+  /* Badge Styling */
+  .badge-base {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border;
+  }
 }
