@@ -22,9 +22,16 @@ export default async function TasksPage({
   });
 
   return (
-    <div className="min-h-full p-4">
-      {/* Page Header from your Design [9] */}
-      {/* Hand off the initial data to the interactive Client Component [10, 11] */}
+    <div className="min-h-full p-8">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-foreground">Tasks</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage tasks across all projects
+        </p>
+      </div>
+
+      {/* Hand off the initial data to the interactive Client Component */}
       <TaskList initialData={initialData} />
     </div>
   );

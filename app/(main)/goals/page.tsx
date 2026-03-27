@@ -33,15 +33,15 @@ export default async function GoalsPage({
 
   return (
     <div className="min-h-full p-8">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-foreground">Goals</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      {/* Page Header with improved spacing and hierarchy */}
+      <div className="mb-12">
+        <h1 className="text-4xl font-bold text-foreground mb-2">Goals</h1>
+        <p className="text-base text-muted-foreground">
           Track progress toward your project objectives and key milestones
         </p>
       </div>
 
-      {/* Hand off the initial data to the interactive Client Component [7] */}
+      {/* Hand off the initial data to the interactive Client Component */}
       <GoalList initialData={initialData} />
     </div>
   );
