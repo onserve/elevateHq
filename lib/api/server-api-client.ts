@@ -1,5 +1,19 @@
 // lib/api/server-api-client.ts
-import { auth } from '@/lib/auth/auth';
+import { auth, signOut} from '@/lib/auth/auth';
+import { redirect } from 'next/navigation';
+import { isRedirectError } from 'next/dist/client/components/redirect-error'; // ✅ Next.js utility
+
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
 
 /**
  * API Response wrapper
@@ -94,7 +108,7 @@ export class ServerApiClient {
     const session = await auth();
 
     if (!session?.accessToken) {
-      throw new ApiError(401, 'No authentication token available');
+      redirect("/")
     }
 
     // Add Bearer token to Authorization header
@@ -121,6 +135,12 @@ export class ServerApiClient {
 
     // Handle error responses
     if (!response.ok) {
+
+      if (response.status === 401) {
+        console.log('[API Client] 401 from backend, redirecting to signout');
+        redirect('/api/auth/signout?callbackUrl=/'); // ✅ same here
+      }
+
       const errorMessage =
         data?.message || data?.error || `HTTP ${response.status}: ${response.statusText}`;
 
@@ -189,6 +209,10 @@ export class ServerApiClient {
 
         return await this.handleResponse<T>(response);
       } catch (error) {
+        if (isRedirectError(error)) {
+          throw error;
+        }
+
         // Don't retry on client errors (4xx) or auth errors
         if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
           throw error;

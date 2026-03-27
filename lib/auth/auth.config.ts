@@ -71,6 +71,15 @@ export default {
      */
     async session({ session, token }) {
       // Add custom fields from JWT to session
+
+      // if (token.expiresAt) {
+      //   const now = Math.floor(Date.now() / 1000);
+      //
+      //   if (now >= token.expiresAt) {
+      //     return null;
+      //   }
+      // }
+
       session.accessToken = token.accessToken;
       session.expiresAt = token.expiresAt;
       session.user.id = token.id as string;
