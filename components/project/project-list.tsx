@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Plus, Trash2, Calendar, Layout, BarChart3, MoreVertical } from 'lucide-react';
+import Link from 'next/link';
 import { useProjects, useDeleteProject } from '@/lib/query/use-projects';
 import { PaginatedResponse } from '@/lib/api/server-api-client';
 import { ProjectListview, Project } from '@/lib/api/service/project-service';
