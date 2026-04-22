@@ -53,8 +53,8 @@ export async function getGoalDetails(goalId: string ): Promise<Goal> {
 }
 
 export async function getGoalOptions(): Promise<GoalOptions[]>{
-  const response = await serverApi.get<GoalOptions[]>('/goals/options');
-  return response.data
+  const response = await serverApi.get<any>('/goals/options');
+  return response.data?.data || response.data;
 }
 
 export interface GoalOptions {

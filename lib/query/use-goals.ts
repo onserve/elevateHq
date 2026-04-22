@@ -1,4 +1,6 @@
 import { PaginatedResponse } from '@/lib/api/server-api-client';
+import { ApiError } from '@/lib/api/server-api-client';
+import { getErrorMessage } from '@/lib/hooks/use-api-error';
 import {
   createGoal,
   deleteGoal,
@@ -7,80 +9,82 @@ import {
   getGoals,
   Goal,
   GoalRequest,
-  PageRequest, updateGoal,
+  PageRequest,
+  updateGoal,
 } from '@/lib/api/service/goal-service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-export function useGetGoals(params?: PageRequest, initialData? : PaginatedResponse<Goal>){
+export function useGetGoals(params?: PageRequest, initialData?: PaginatedResponse<Goal>) {
   return useQuery({
-    queryKey: ["goals", params],
+    queryKey: ['goals', params],
     queryFn: () => getGoals(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 5 * 60 * 1000
-  })
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useGoalDetails(goalId: string){
+export function useGoalDetails(goalId: string) {
   return useQuery({
-    queryKey: ["goals", goalId ],
+    queryKey: ['goals', goalId],
     queryFn: () => getGoalDetails(goalId),
-    staleTime: 5 * 60 * 1000
-  })
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useGoalOptions(){
+export function useGoalOptions() {
   return useQuery({
-    queryKey: ["goals", "options"],
+    queryKey: ['goals', 'options'],
     queryFn: () => getGoalOptions(),
-    staleTime: 5 * 60 * 1000
-  })
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useCreateGoal(){
+export function useCreateGoal() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (input: GoalRequest) => createGoal(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey : ["goals"]});
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
       toast.success('Goal created successfully.');
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create Goal");
-    }
-  })
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to create goal.'));
+    },
+  });
 }
 
-export function useUpdateGoal(){
+export function useUpdateGoal() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({goalId, input}: {goalId: string , input: GoalRequest}) =>
+    mutationFn: ({ goalId, input }: { goalId: string; input: GoalRequest }) =>
       updateGoal(goalId, input),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({queryKey : ["goals"]});
-
-      if(data.id){
-        queryClient.invalidateQueries({queryKey : ["goals", data.id.toString()]});
-
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      if (data.id) {
+        queryClient.invalidateQueries({ queryKey: ['goals', data.id.toString()] });
       }
-
       toast.success('Goal updated successfully.');
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to update Goal");
-    }
-  })
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to update goal.'));
+    },
+  });
 }
 
-export function useDeleteGoal(){
+export function useDeleteGoal() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (goalId: string) => deleteGoal(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey : ["goals"]});
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
       toast.success('Goal deleted successfully.');
-    }
-  })
+    },
+    onError: (error: ApiError) => {
+      // Previously missing — delete failures were completely silent
+      toast.error(getErrorMessage(error, 'Failed to delete goal.'));
+    },
+  });
 }

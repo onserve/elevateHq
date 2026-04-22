@@ -29,22 +29,28 @@ const navigation = [
     href: '/dashboard',
   },
   {
+    id: 'document',
+    name: 'Documents',
+    icon: File,
+    href: '/documents',
+  },
+  {
     id: 'projects',
     name: 'Projects',
     icon: Briefcase,
     href: '/projects',
   },
   {
-    id: 'goals',
-    name: 'Goals',
-    icon: Target,
-    href: '/goals',
-  },
-  {
     id: 'finance',
     name: 'Finance',
     icon: Wallet,
     href: '/finance',
+  },
+  {
+    id: 'goals',
+    name: 'Goals',
+    icon: Target,
+    href: '/goals',
   },
   {
     id: 'tasks',

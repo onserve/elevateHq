@@ -34,14 +34,6 @@ export default {
     async jwt({ token, account, profile }) {
       // Initial sign in - account and profile are available
       if (account && profile) {
-        // Extract roles from Keycloak
-
-        // console.log('=== KEYCLOAK PROFILE DEBUG ===')
-        // console.log('Full profile:', JSON.stringify(profile, null, 2))
-        // console.log('realm_access:', (profile as any).realm_access)
-        // console.log('resource_access:', (profile as any).resource_access)
-        // console.log('=============================')
-
         const realmRoles = (profile as any).realm_access?.roles || [];
         const clientRoles =
           (profile as any).resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles || [];
@@ -49,7 +41,6 @@ export default {
 
         console.log('Extracted roles:', roles);
 
-        // Add tokens and user data to JWT
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.expiresAt = account.expires_at;
@@ -57,9 +48,17 @@ export default {
         token.email = profile.email;
         token.name = profile.name;
         token.roles = roles;
+        token.error = undefined; // clear any previous error on fresh login
+        return token;
       }
 
-      // Token is now augmented with our custom fields
+      // Subsequent calls — check if the access token has expired
+      const now = Math.floor(Date.now() / 1000);
+      if (token.expiresAt && now >= token.expiresAt) {
+        console.warn('[Auth] Access token expired, flagging session for invalidation');
+        return { ...token, error: 'AccessTokenExpired' as const };
+      }
+
       return token;
     },
 
@@ -70,15 +69,13 @@ export default {
      * that's available in components via useSession() or auth()
      */
     async session({ session, token }) {
-      // Add custom fields from JWT to session
-
-      // if (token.expiresAt) {
-      //   const now = Math.floor(Date.now() / 1000);
-      //
-      //   if (now >= token.expiresAt) {
-      //     return null;
-      //   }
-      // }
+      // If the underlying access token has expired, propagate the error
+      // and do NOT put the expired token on the session.
+      // The authorized() callback and proxy.ts will redirect to sign-in.
+      if (token.error === 'AccessTokenExpired') {
+        session.error = 'AccessTokenExpired';
+        return session;
+      }
 
       session.accessToken = token.accessToken;
       session.expiresAt = token.expiresAt;
@@ -105,6 +102,11 @@ export default {
       const publicRoutes = ['/', '/about', '/auth/error', '/auth/signup'];
       if (publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
         return true;
+      }
+
+      // If the access token has expired, force re-authentication
+      if (auth?.error === 'AccessTokenExpired') {
+        return false;
       }
 
       // Require authentication for all other routes

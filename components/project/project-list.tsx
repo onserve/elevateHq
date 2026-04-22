@@ -80,9 +80,10 @@ export function ProjectList({ initialData }: ProjectListProps) {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (
-          <div
+          <Link
+            href={`/projects/${project.id}`}
             key={project.id}
-            className="group p-6 border border-border rounded-2xl bg-card shadow-sm hover:shadow-lg hover:border-accent/20 transition-all duration-200 cursor-pointer"
+            className="group p-6 border border-border rounded-2xl bg-card shadow-sm hover:shadow-lg hover:border-accent/20 transition-all duration-200 cursor-pointer block text-left"
           >
             <div className="flex justify-between items-start mb-5">
               <div className="p-3 bg-accent/10 rounded-xl">
@@ -109,13 +110,17 @@ export function ProjectList({ initialData }: ProjectListProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => deleteProject.mutate(project.id.toString())}
+                className="opacity-0 group-hover:opacity-100 transition-opacity relative z-10"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  deleteProject.mutate(project.id.toString());
+                }}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          </div>
+          </Link>
           ))}
         </div>
       )}

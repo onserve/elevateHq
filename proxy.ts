@@ -7,9 +7,11 @@ export const proxy = auth((req) => {
 
   if (publicPaths.includes(pathname)) return NextResponse.next();
 
-  // With JWT strategy, auth() sets req.auth to null when token is expired
-  if (!req.auth) {
-    console.log('[Proxy] No valid session, redirecting');
+  // With JWT strategy, auth() sets req.auth to null when there is no session.
+  // When the access token has expired our jwt()/session() callbacks set an error
+  // field instead of returning null — check both conditions.
+  if (!req.auth || req.auth.error === 'AccessTokenExpired') {
+    console.log('[Proxy] No valid session or expired token, redirecting to /');
     return NextResponse.redirect(new URL('/', req.url));
   }
 

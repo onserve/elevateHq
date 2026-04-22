@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CheckSquare, User, Settings, Briefcase } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, File, Settings, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -24,16 +24,16 @@ const mobileNav = [
     href: 'projects',
   },
   {
+    id: 'document',
+    name: 'Documents',
+    icon: File,
+    href: '/documents',
+  },
+  {
     id: 'tasks',
     name: 'Tasks',
     icon: CheckSquare,
     href: 'tasks',
-  },
-  {
-    id: 'profile',
-    name: 'Profile',
-    icon: User,
-    href: '/profile',
   },
   {
     id: 'settings',

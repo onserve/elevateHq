@@ -4,7 +4,7 @@ import { TaskList } from '@/components/task/task-list';
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: { page?: string; size?: string; sort?: string; status?: string; priority?: string };
+  searchParams: Promise<{ page?: string; size?: string; sort?: string; status?: string; priority?: string }>;
 }) {
   const params = await searchParams;
   // 1. Parse query parameters from the URL

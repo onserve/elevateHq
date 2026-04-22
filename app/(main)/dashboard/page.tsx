@@ -4,6 +4,7 @@ import { TrendingUp, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default async function DashboardPage() {
   const session = await auth();
+  if (!session) return null; // Layout handles redirect; this narrows the type
 
   return (
     <div className="min-h-full p-8">
@@ -101,14 +102,14 @@ export default async function DashboardPage() {
             <div>
               <p className="text-sm text-muted-foreground mb-1">User ID</p>
               <p className="text-base font-medium font-mono text-foreground text-sm">
-                {(session.user as any).id}
+                {session.user.id}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Roles</p>
               <div className="flex gap-2 mt-1 flex-wrap">
-                {(session.user as any).roles?.length > 0 ? (
-                  (session.user as any).roles.map((role: string) => (
+                {session.user.roles?.length ? (
+                  session.user.roles?.map((role: string) => (
                     <span
                       key={role}
                       className="px-3 py-1 bg-accent/10 text-accent text-xs font-semibold rounded-full"

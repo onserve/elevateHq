@@ -57,9 +57,9 @@ export async function getProjectDetails(projectId: string): Promise<Project> {
 
 export async function getProjectOptions(): Promise<ProjectOptions[]> {
 
-  const response = await serverApi.get<ProjectOptions[]>('/projects/options');
+  const response = await serverApi.get<any>('/projects/options');
 
-  return response.data;
+  return response.data?.data || response.data;
 }
 
 

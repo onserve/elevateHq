@@ -75,6 +75,11 @@ export async function getTasks(params?: PageRequest) :Promise<PaginatedResponse<
   return response.data;
 }
 
+export async function getTask(id: string): Promise<Task> {
+  const response = await serverApi.get<any>(`/tasks/${id}`);
+  return response.data?.data || response.data;
+}
+
 export async function updateTask(id: string, input: TaskRequest ): Promise<Task> {
   const response = await serverApi.put<Task>(`/tasks/${id}`, input);
   revalidatePath("/tasks");

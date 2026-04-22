@@ -1,5 +1,7 @@
-import { useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import { PaginatedResponse} from '@/lib/api/server-api-client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { PaginatedResponse } from '@/lib/api/server-api-client';
+import { ApiError } from '@/lib/api/server-api-client';
+import { getErrorMessage } from '@/lib/hooks/use-api-error';
 import {
   createProject,
   updateProject,
@@ -12,75 +14,75 @@ import {
   PageRequest,
 } from '@/lib/api/service/project-service';
 
-import { toast} from 'sonner';
+import { toast } from 'sonner';
 
-export function useProjects(params?: PageRequest, initialData?: PaginatedResponse<ProjectListview>){
+export function useProjects(params?: PageRequest, initialData?: PaginatedResponse<ProjectListview>) {
   return useQuery({
-    queryKey: ["projects", params],
-    queryFn:() => getProjectsList(params),
+    queryKey: ['projects', params],
+    queryFn: () => getProjectsList(params),
     placeholderData: (previousData) => previousData,
-    staleTime: 5 * 60* 1000
-  })
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useProjectOptions(){
+export function useProjectOptions() {
   return useQuery({
-    queryKey: ["projects", "options"],
+    queryKey: ['projects', 'options'],
     queryFn: () => getProjectOptions(),
-    staleTime: 5 * 60* 1000
-  })
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useProject(projectId: string){
+export function useProject(projectId: string) {
   return useQuery({
-    queryKey: ["projects", projectId],
+    queryKey: ['projects', projectId],
     queryFn: () => getProjectDetails(projectId),
-    enabled: !!projectId
-  })
+    enabled: !!projectId,
+  });
 }
 
-export function useCreateProject(){
+export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: ProjectRequest) => createProject(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["projects"]});
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Project created successfully.');
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create project");
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to create project.'));
     },
-  })
+  });
 }
 
-export function useUpdateProject(){
+export function useUpdateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({projectId, input} : {projectId: string, input: ProjectRequest}) => updateProject(projectId, input),
+    mutationFn: ({ projectId, input }: { projectId: string; input: ProjectRequest }) =>
+      updateProject(projectId, input),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({queryKey: ["projects"]});
-
-      if(data.id){
-        queryClient.invalidateQueries({queryKey: ["projects", data.id.toString()]});
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      if (data.id) {
+        queryClient.invalidateQueries({ queryKey: ['projects', data.id.toString()] });
       }
       toast.success('Project updated successfully.');
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to update project");
-    }
-  })
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to update project.'));
+    },
+  });
 }
 
-export function useDeleteProject(projectId: string){
+export function useDeleteProject(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (projectId: string) => deleteProject(projectId),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["projects"]});
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Project deleted successfully.');
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to delete project");
-    }
-  })
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to delete project.'));
+    },
+  });
 }

@@ -8,8 +8,10 @@ import { SignInButton } from '@/components/auth/sign-in-button';
 export default async function HomePage() {
   const session = await auth();
 
-  // Server-side redirect if already authenticated
-  if (session) {
+  // Only redirect to dashboard if the session is valid (no expiry error).
+  // An expired session is truthy but must NOT be allowed through — the user
+  // needs to re-authenticate.
+  if (session && !session.error) {
     redirect('/dashboard');
   }
 

@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Project, ProjectRequest } from '@/lib/api/service/project-service';
 import { useCreateProject, useUpdateProject } from '@/lib/query/use-projects';
+import { getErrorMessage, isValidationError } from '@/lib/hooks/use-api-error';
 import {
   Form,
   FormControl,
@@ -77,21 +78,34 @@ export function ProjectForm({
         .filter(Boolean),
     };
 
-    if (initial) {
-      // Wrapper pattern to avoid "missing body" errors [12, 13]
-      await updateMutation.mutateAsync({
-        projectId: initial.id.toString(),
-        input: formattedValues,
-      });
-    } else {
-      await createMutation.mutateAsync(formattedValues);
+    try {
+      if (initial) {
+        await updateMutation.mutateAsync({
+          projectId: initial.id.toString(),
+          input: formattedValues,
+        });
+      } else {
+        await createMutation.mutateAsync(formattedValues);
+      }
+      onSuccess();
+    } catch (err) {
+      // 422 validation errors → surface inline in the form
+      // Other errors (500, network) → already handled by mutation's onError toast
+      if (isValidationError(err)) {
+        form.setError('root', { message: getErrorMessage(err, 'Validation failed.') });
+      }
     }
-    onSuccess();
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* API-level validation error */}
+        {form.formState.errors.root && (
+          <p className="text-sm font-medium text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+            {form.formState.errors.root.message}
+          </p>
+        )}
         <FormField
           control={form.control}
           name="name"
@@ -165,6 +179,7 @@ export function ProjectForm({
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -177,6 +192,36 @@ export function ProjectForm({
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="budget"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Budget</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags (Comma Separated)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. web, finance" {...field} />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -191,6 +236,7 @@ export function ProjectForm({
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

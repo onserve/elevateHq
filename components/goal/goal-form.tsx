@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Goal, GoalRequest } from '@/lib/api/service/goal-service';
 import { useCreateGoal, useUpdateGoal } from '@/lib/query/use-goals';
 import { useProjectOptions } from '@/lib/query/use-projects';
+import { getErrorMessage, isValidationError } from '@/lib/hooks/use-api-error';
 
 import {
   Form,
@@ -83,22 +84,33 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
 
   // 3. Handle Secure Submission via Server Actions
   async function onSubmit(values: FormValues) {
-    if (isEdit && initial) {
-      // Fix: Follow the Single Argument Rule from useUpdateGoal [11]
-      const updated = await updateMutation.mutateAsync({
-        goalId: initial.id,
-        input: values as GoalRequest,
-      });
-      onSuccess?.(updated as any);
-    } else {
-      const created = await createMutation.mutateAsync(values as GoalRequest);
-      onSuccess?.(created as any);
+    try {
+      if (isEdit && initial) {
+        const updated = await updateMutation.mutateAsync({
+          goalId: initial.id,
+          input: values as GoalRequest,
+        });
+        onSuccess?.(updated as any);
+      } else {
+        const created = await createMutation.mutateAsync(values as GoalRequest);
+        onSuccess?.(created as any);
+      }
+    } catch (err) {
+      if (isValidationError(err)) {
+        form.setError('root', { message: getErrorMessage(err, 'Validation failed.') });
+      }
     }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+        {/* API-level validation error */}
+        {form.formState.errors.root && (
+          <p className="text-sm font-medium text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+            {form.formState.errors.root.message}
+          </p>
+        )}
         <FormField
           control={form.control}
           name="title"
@@ -153,7 +165,7 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
                   <SelectContent>
                     {projectOptions?.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.title}
+                        {p.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -173,6 +185,7 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
                 <FormControl>
                   <Input type="number" {...field} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -185,6 +198,7 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
                 <FormControl>
                   <Input placeholder="USD" {...field} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -199,6 +213,7 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
               <FormControl>
                 <Textarea placeholder="Details about this objective..." {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

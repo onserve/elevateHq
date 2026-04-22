@@ -99,7 +99,11 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
                 variant="ghost"
                 size="icon"
                 className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9"
-                onClick={() => deleteGoal.mutate(goal.id)}
+                onClick={() => {
+                  if (confirm('Delete this goal?')) {
+                    deleteGoal.mutate(goal.id);
+                  }
+                }}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
