@@ -9,7 +9,7 @@ import {
   Target,
   Wallet,
   CheckSquare,
-  FileText,
+  File,
   User,
   Settings,
 } from 'lucide-react';
@@ -57,12 +57,6 @@ const navigation = [
     name: 'Tasks',
     icon: CheckSquare,
     href: '/tasks',
-  },
-  {
-    id: 'documents',
-    name: 'Documents',
-    icon: FileText,
-    href: '/documents',
   },
   {
     id: 'profile',
