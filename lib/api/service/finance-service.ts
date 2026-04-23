@@ -8,45 +8,32 @@ import { revalidatePath } from 'next/cache';
 
 export type TransactionType = 'INCOME' | 'EXPENSE';
 
-export type TransactionCategory =
-  | 'SALARY'
-  | 'FREELANCE'
-  | 'INVESTMENTS'
-  | 'OTHER_INCOME'
-  | 'HOUSING'
-  | 'FOOD'
-  | 'TRANSPORTATION'
-  | 'UTILITIES'
-  | 'ENTERTAINMENT'
-  | 'HEALTH'
-  | 'PROJECTS'
-  | 'OTHER_EXPENSE';
 
 export interface Transaction {
   id: UUID;
-  title: string;
-  description?: string;
+  description: string;
   type: TransactionType;
-  category: TransactionCategory;
+  category: string;
   amount: number;
   date: string;
+  account?: string;
   projectId?: string;
   projectName?: string;
+  goalId?: string;
+  goalName?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TransactionRequest {
-  title: string;
-  description?: string;
+  description: string;
   type: TransactionType;
-  category: TransactionCategory;
+  category: string;
   amount: number;
   date: string;
-  projectId?: string;
-  tags?: string[];
-  recurring?: boolean;
-  recurringPeriod?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  account?: string | null;
+  projectId?: string | null;
+  goalId?: string | null;
 }
 
 export interface FinanceSummary {
@@ -64,8 +51,8 @@ export interface PageRequest {
   size?: number;
   sort?: string | string[];
   type?: TransactionType;
-  category?: TransactionCategory;
-  title?: string;
+  category?: string;
+  description?: string;
   startDate?: string;
   endDate?: string;
   projectId?: string;
@@ -101,24 +88,24 @@ export async function getTransactions(
 }
 
 export async function getTransaction(id: string): Promise<Transaction> {
-  const response = await serverApi.get<Transaction>(`/finance/${id}`);
-  return response.data;
+  const response = await serverApi.get<any>(`/finance/${id}`);
+  return response.data?.data || response.data;
 }
 
 export async function createTransaction(input: TransactionRequest): Promise<Transaction> {
-  const response = await serverApi.post<Transaction>('/finance', input);
+  const response = await serverApi.post<any>('/finance', input);
   revalidatePath('/finance');
-  return response.data;
+  return response.data?.data || response.data;
 }
 
 export async function updateTransaction(
   id: string,
   input: TransactionRequest,
 ): Promise<Transaction> {
-  const response = await serverApi.put<Transaction>(`/finance${id}`, input);
+  const response = await serverApi.put<any>(`/finance/${id}`, input);
   revalidatePath('/finance');
   revalidatePath(`/finance/${id}`);
-  return response.data;
+  return response.data?.data || response.data;
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
@@ -127,6 +114,6 @@ export async function deleteTransaction(id: string): Promise<void> {
 }
 
 export async function getFinanceSummary(): Promise<FinanceSummary> {
-  const response = await serverApi.get<FinanceSummary>('/finance/summary');
-  return response.data;
+  const response = await serverApi.get<any>('/finance/summary');
+  return response.data?.data || response.data;
 }

@@ -24,10 +24,11 @@ export function useGetGoals(params?: PageRequest, initialData?: PaginatedRespons
   });
 }
 
-export function useGoalDetails(goalId: string) {
+export function useGoalDetails(goalId?: string) {
   return useQuery({
     queryKey: ['goals', goalId],
-    queryFn: () => getGoalDetails(goalId),
+    queryFn: () => getGoalDetails(goalId!),
+    enabled: !!goalId,
     staleTime: 5 * 60 * 1000,
   });
 }

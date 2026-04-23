@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Plus, Search, Target, Trash2, Calendar, TrendingUp } from 'lucide-react';
-import { useGetGoals, useDeleteGoal } from '@/lib/query/use-goals';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Search, Target, Trash2, Calendar, TrendingUp, Loader2 } from 'lucide-react';
+import { useGetGoals, useDeleteGoal, useGoalDetails } from '@/lib/query/use-goals';
 import { PaginatedResponse } from '@/lib/api/server-api-client';
 import { Goal } from '@/lib/api/service/goal-service';
 import { Button } from '@/components/ui/button';
@@ -13,15 +13,21 @@ import { GoalForm } from './goal-form';
 export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal> }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [deletingGoal, setDeletingGoal] = useState<Goal | null>(null);
 
   const { data } = useGetGoals({ page: 0, size: 10 }, initialData);
-  // [8];
   const deleteGoal = useDeleteGoal();
-  // [6];
+
+  const { data: goalDetails, isLoading: isGoalLoading } = useGoalDetails(editingGoalId ?? undefined);
+
+  useEffect(() => {
+    if (editingGoalId && goalDetails && !isGoalLoading) {
+      setIsFormOpen(true);
+    }
+  }, [editingGoalId, goalDetails, isGoalLoading]);
 
   const allGoals = data?.content || initialData?.content || [];
-  // [7];
 
   const filteredGoals = useMemo(() => {
     return allGoals.filter(
@@ -32,13 +38,19 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
   }, [allGoals, searchQuery]);
 
   const openCreate = () => {
-    setEditingGoal(null);
+    setEditingGoalId(null);
     setIsFormOpen(true);
   };
-  const openEdit = (goal: Goal) => {
-    setEditingGoal(goal);
-    setIsFormOpen(true);
+  const openEdit = (goalId: string) => {
+    setEditingGoalId(goalId);
   };
+
+  function handleDialogClose(open: boolean) {
+    if (!open) {
+      setIsFormOpen(false);
+      setEditingGoalId(null);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -67,23 +79,32 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
         </div>
       ) : (
         <div className="grid gap-3">
-          {filteredGoals.map((goal) => (
+          {filteredGoals.map((goal) => {
+            const isLoadingThis = editingGoalId === goal.id && isGoalLoading;
+
+            return (
           <div
             key={goal.id}
-            className="group flex items-center justify-between p-5 border border-border rounded-xl bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all duration-200"
+            className={`group flex items-center justify-between p-5 border border-border rounded-xl bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all duration-200 cursor-pointer ${
+                  isLoadingThis ? 'animate-pulse bg-accent/5 pointer-events-none' : ''
+                }`}
+                onClick={() => openEdit(goal.id)}
           >
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <div className="p-3 bg-accent/10 rounded-xl flex-shrink-0">
+                {isLoadingThis ? (
+                      <Loader2 className="h-5 w-5 text-accent animate-spin" />
+                    ) : (
                 <Target className="h-5 w-5 text-accent" />
+                    )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3
-                  className="font-semibold text-foreground cursor-pointer hover:text-accent transition-colors truncate"
-                  onClick={() => openEdit(goal)}
+                  className="font-semibold text-foreground truncate"
                 >
                   {goal.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-1">
                   {goal.projectName || 'General Goal'}
                 </p>
               </div>
@@ -99,32 +120,62 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
                 variant="ghost"
                 size="icon"
                 className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9"
-                onClick={() => {
-                  if (confirm('Delete this goal?')) {
-                    deleteGoal.mutate(goal.id);
-                  }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeletingGoal(goal);
                 }}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
           </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingGoal ? 'Edit Goal' : 'Create New Goal'}</DialogTitle>
+            <DialogTitle>{editingGoalId ? 'Edit Goal' : 'Create New Goal'}</DialogTitle>
           </DialogHeader>
           <GoalForm
-            initial={editingGoal}
-            onSuccess={() => setIsFormOpen(false)}
-            onCancel={() => setIsFormOpen(false)}
+            key={editingGoalId ?? 'create'}
+            goalData={editingGoalId ? goalDetails : undefined}
+            onSuccess={() => handleDialogClose(false)}
+            onCancel={() => handleDialogClose(false)}
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Dialog for Delete Confirmation */}
+      <Dialog open={!!deletingGoal} onOpenChange={(open) => !open && setDeletingGoal(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Goal</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-foreground">
+            Are you sure you want to delete the goal <span className="font-semibold text-destructive">{deletingGoal?.title}</span>? This action cannot be undone.
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setDeletingGoal(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deletingGoal) {
+                  deleteGoal.mutate(deletingGoal.id);
+                  setDeletingGoal(null);
+                }
+              }}
+            >
+              Delete Goal
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
     </div>
   );
 }

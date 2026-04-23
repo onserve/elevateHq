@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -12,9 +12,10 @@ import {
   DollarSign,
   Wallet,
   SlidersHorizontal,
+  Loader2,
 } from 'lucide-react';
 
-import { useTransactions, useDeleteTransaction } from '@/lib/query/use-finance';
+import { useTransactions, useDeleteTransaction, useTransaction } from '@/lib/query/use-finance';
 import type { Transaction, TransactionType } from '@/lib/api/service/finance-service';
 import type { PaginatedResponse } from '@/lib/api/server-api-client';
 
@@ -58,10 +59,21 @@ export function TransactionList({ initialData }: TransactionListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | TransactionType>('ALL');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
 
   const { data } = useTransactions({ page: 0, size: 50 }, initialData);
   const deleteTransaction = useDeleteTransaction();
+
+  // Fetch full transaction details when an edit is requested
+  const { data: transactionDetails, isLoading: isTransactionLoading } = useTransaction(editingTransactionId ?? '');
+
+  // Deferred dialog: open only once data arrives
+  useEffect(() => {
+    if (editingTransactionId && transactionDetails && !isTransactionLoading) {
+      setIsFormOpen(true);
+    }
+  }, [editingTransactionId, transactionDetails, isTransactionLoading]);
 
   const allTransactions = data?.content || initialData?.content || [];
 
@@ -91,13 +103,20 @@ export function TransactionList({ initialData }: TransactionListProps) {
   }, [allTransactions, searchQuery, typeFilter]);
 
   function openCreate() {
-    setEditingTransaction(null);
+    setEditingTransactionId(null);
     setIsFormOpen(true);
   }
 
-  function openEdit(transaction: Transaction) {
-    setEditingTransaction(transaction);
-    setIsFormOpen(true);
+  function openEdit(transactionId: string) {
+    setEditingTransactionId(transactionId);
+    // Dialog will open via useEffect once data is fetched
+  }
+
+  function handleDialogClose(open: boolean) {
+    if (!open) {
+      setIsFormOpen(false);
+      setEditingTransactionId(null);
+    }
   }
 
   return (
@@ -205,11 +224,14 @@ export function TransactionList({ initialData }: TransactionListProps) {
       {/* Transaction List */}
       <div className="grid gap-3">
         {filteredTransactions.length > 0 ? (
-          filteredTransactions.map((transaction) => (
+          filteredTransactions.map((transaction) => {
+            const isLoadingThis = editingTransactionId === transaction.id && isTransactionLoading;
+
+            return (
             <div
               key={transaction.id}
-              className="group flex items-center justify-between p-5 border border-border rounded-xl bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all duration-200 cursor-pointer"
-              onClick={() => openEdit(transaction)}
+              className={`group flex items-center justify-between p-5 border border-border rounded-xl bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all duration-200 cursor-pointer ${isLoadingThis ? 'animate-pulse bg-accent/5 pointer-events-none' : ''}`}
+              onClick={() => openEdit(transaction.id)}
             >
               {/* Icon */}
               <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -220,7 +242,9 @@ export function TransactionList({ initialData }: TransactionListProps) {
                       : 'bg-rose-100 dark:bg-rose-500/10'
                   }`}
                 >
-                  {transaction.type === 'INCOME' ? (
+                  {isLoadingThis ? (
+                    <Loader2 className={`h-5 w-5 animate-spin ${transaction.type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`} />
+                  ) : transaction.type === 'INCOME' ? (
                     <ArrowUpCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   ) : (
                     <ArrowDownCircle className="h-5 w-5 text-rose-600 dark:text-rose-400" />
@@ -270,16 +294,15 @@ export function TransactionList({ initialData }: TransactionListProps) {
                   className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm('Delete this transaction?')) {
-                      deleteTransaction.mutate(transaction.id);
-                    }
+                    setDeletingTransaction(transaction);
                   }}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
-          ))
+            );
+          })
         ) : (
           <div className="py-20 text-center border-2 border-dashed rounded-2xl bg-muted/20">
             <DollarSign className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-40" />
@@ -293,19 +316,48 @@ export function TransactionList({ initialData }: TransactionListProps) {
       </div>
 
       {/* Create / Edit Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
+              {editingTransactionId ? 'Edit Transaction' : 'Add Transaction'}
             </DialogTitle>
           </DialogHeader>
 
           <TransactionForm
-            initial={editingTransaction}
-            onCancel={() => setIsFormOpen(false)}
-            onSuccess={() => setIsFormOpen(false)}
+            key={editingTransactionId ?? 'create'}
+            transactionData={editingTransactionId ? transactionDetails : undefined}
+            onCancel={() => handleDialogClose(false)}
+            onSuccess={() => handleDialogClose(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deletingTransaction} onOpenChange={(open) => !open && setDeletingTransaction(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Transaction</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-foreground">
+            Are you sure you want to delete <span className="font-semibold text-destructive">{deletingTransaction?.description}</span>? This action cannot be undone.
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setDeletingTransaction(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deletingTransaction) {
+                  deleteTransaction.mutate(deletingTransaction.id);
+                  setDeletingTransaction(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
