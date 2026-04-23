@@ -5,11 +5,9 @@ import { useDropzone } from 'react-dropzone';
 import { UploadCloud, CheckCircle2, Loader2 } from 'lucide-react';
 import { useUploadDocument } from '@/lib/query/use-documents';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function DocumentUploadZone() {
-  const router = useRouter();
   const { mutate: uploadDocument, isPending } = useUploadDocument();
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<string>('');
@@ -24,14 +22,14 @@ export function DocumentUploadZone() {
     
     const file = acceptedFiles[0];
     uploadDocument({ file, source }, {
-      onSuccess: (data) => {
-        router.push(`/documents/${data.id}`);
+      onSuccess: () => {
+        setSource('');
       },
       onError: () => {
          setError("Upload failed. Please try again or use a supported file type.");
       }
     });
-  }, [uploadDocument, router, source]);
+  }, [uploadDocument, source]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,

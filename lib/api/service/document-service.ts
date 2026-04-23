@@ -18,29 +18,29 @@ export interface Transaction {
 
 export interface DocumentRecord {
   id: string;
-  name: string;
-  uploadDate: string;
-  status: 'PROCESSING' | 'PROCESSED' | 'FAILED';
-  transactionCount: number;
+  filename: string;
+  uploadedDate: string;
+  status: 'PROCESSING' | 'ARCHIVED' | 'FAILED' | 'UPLOADED' | 'COMPLETED';
+  extractedTransactions: number;
+  selectedTransactions: number;
+  source: string;
   confidenceScore: number;
-  transactions?: Transaction[];
-  totalIncome?: number;
-  totalExpense?: number;
-  netFlow?: number;
+  processingProgress?: number;
 }
+
 
 export async function uploadDocument(formData: FormData): Promise<DocumentRecord> {
-  const response = await serverApi.post<DocumentRecord>('/documents/upload', formData);
+  const response = await serverApi.post<any>('/documents/upload', formData);
   revalidatePath('/documents');
-  return response.data;
+  return response.data?.data || response.data;
 }
 
-export async function getRecentDocuments(): Promise<PaginatedResponse<DocumentRecord>> {
-  const response = await serverApi.get<PaginatedResponse<DocumentRecord>>('/documents');
-  return response.data;
+export async function getRecentDocuments(): Promise<DocumentRecord[]> {
+  const response = await serverApi.get<any>('/documents');
+  return response.data?.data || response.data;
 }
 
 export async function getDocumentDetails(id: string): Promise<DocumentRecord> {
-  const response = await serverApi.get<DocumentRecord>(`/documents/${id}`);
-  return response.data;
+  const response = await serverApi.get<any>(`/documents/${id}`);
+  return response.data?.data || response.data;
 }

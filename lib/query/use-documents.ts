@@ -14,6 +14,13 @@ export function useRecentDocuments() {
     queryKey: ['documents', 'recent'],
     queryFn: () => getRecentDocuments(),
     staleTime: 5 * 60 * 1000,
+    refetchInterval: (query) => {
+      const data = query.state.data as DocumentRecord[] | undefined;
+      const hasProcessing = data?.some(
+        (doc) => doc.status === 'PROCESSING' || doc.status === 'UPLOADED'
+      );
+      return hasProcessing ? 3000 : false;
+    },
   });
 }
 
