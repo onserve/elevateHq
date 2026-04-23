@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,67 +32,56 @@ const schema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   category: z.enum(['FINANCIAL', 'PERSONAL', 'BUSINESS', 'HEALTH', 'OTHER']),
+  status: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'PAUSED']),
   targetValue: z.coerce.number().optional(),
+  currentValue: z.coerce.number().optional(),
   unit: z.string().optional(),
   deadline: z.string().optional(),
-  projectId: z.string().optional(),
+  projectId: z.string().nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 interface GoalFormProps {
-  initial?: Goal | null; // Null indicates "Create" mode
+  goalData?: Goal | null; // complete data from getDetails
   onSuccess?: (goal: Goal) => void;
   onCancel?: () => void;
 }
 
-export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
-  const createMutation = useCreateGoal(); // [10]
-  const updateMutation = useUpdateGoal(); // [11]
-  const { data: projectOptions } = useProjectOptions(); // [12]
+export function GoalForm({ goalData, onSuccess, onCancel }: GoalFormProps) {
+  const createMutation = useCreateGoal();
+  const updateMutation = useUpdateGoal();
+  const { data: projectOptions } = useProjectOptions();
 
-  const isEdit = !!initial;
+  const isEdit = !!goalData;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      title: initial?.title ?? '',
-      description: initial?.description ?? '',
-      category: initial?.category ?? 'PERSONAL',
-      targetValue: initial?.targetValue ?? 0,
-      unit: initial?.unit ?? '',
-      deadline: initial?.deadline ?? '',
-      projectId: initial?.projectId ?? '',
+      title: goalData?.title ?? '',
+      description: goalData?.description ?? '',
+      category: goalData?.category ?? 'PERSONAL',
+      status: goalData?.status ?? 'NOT_STARTED',
+      targetValue: goalData?.targetValue ?? undefined,
+      currentValue: goalData?.currentValue ?? undefined,
+      unit: goalData?.unit ?? '',
+      deadline: goalData?.deadline ?? '',
+      projectId: goalData?.projectId ?? null,
     },
   });
-
-  // 2. Sync form when initial data changes (Pattern from Source [8])
-  useEffect(() => {
-    if (initial) {
-      form.reset({
-        title: initial.title,
-        description: initial.description,
-        category: initial.category,
-        targetValue: initial.targetValue,
-        unit: initial.unit,
-        deadline: initial.deadline,
-        projectId: initial.projectId,
-      });
-    }
-  }, [initial, form]);
 
   // 3. Handle Secure Submission via Server Actions
   async function onSubmit(values: FormValues) {
     try {
-      if (isEdit && initial) {
+      if (isEdit && goalData) {
         const updated = await updateMutation.mutateAsync({
-          goalId: initial.id,
+          goalId: goalData.id,
           input: values as GoalRequest,
         });
-        onSuccess?.(updated as any);
+        onSuccess?.(updated);
       } else {
         const created = await createMutation.mutateAsync(values as GoalRequest);
-        onSuccess?.(created as any);
+        onSuccess?.(created);
       }
     } catch (err) {
       if (isValidationError(err)) {
@@ -146,36 +134,90 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
 
           <FormField
             control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="PAUSED">Paused</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <FormField
+            control={form.control}
             name="projectId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Link to Project</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                  value={field.value ? String(field.value) : 'none'}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Optional" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    <SelectItem value="none">None (Clear Selection)</SelectItem>
+
+                    {/* Fallback item from goalData if it exists and is selected but not matching list */}
+                    {goalData?.projectId &&
+                      !projectOptions?.some(p => String(p.id) === String(goalData.projectId)) && (
+                        <SelectItem value={String(goalData.projectId)}>
+                          {goalData.projectName || 'Selected Project'}
+                        </SelectItem>
+                      )}
+
                     {projectOptions?.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
+                      <SelectItem key={p.id} value={String(p.id)}>
                         {p.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="currentValue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current Value</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="targetValue"
@@ -183,7 +225,7 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
               <FormItem>
                 <FormLabel>Target Value</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input type="number" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -194,15 +236,29 @@ export function GoalForm({ initial, onSuccess, onCancel }: GoalFormProps) {
             name="unit"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Unit (USD, Count, etc.)</FormLabel>
+                <FormLabel>Unit</FormLabel>
                 <FormControl>
-                  <Input placeholder="USD" {...field} />
+                  <Input placeholder="e.g. KES, %" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="deadline"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Deadline</FormLabel>
+              <FormControl>
+                <Input type="datetime-local" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

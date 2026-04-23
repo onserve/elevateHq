@@ -2,9 +2,9 @@
 
 import { PaginatedResponse } from '@/lib/api/server-api-client';
 import { serverApi } from '@/lib/api/server-api-client';
-import { revalidatePath} from 'next/cache';
+import { revalidatePath } from 'next/cache';
 
-export async function getGoals(params?: PageRequest) : Promise<PaginatedResponse<Goal>>{
+export async function getGoals(params?: PageRequest): Promise<PaginatedResponse<Goal>> {
   const queryParams = new URLSearchParams();
 
   if (params?.sort) {
@@ -30,29 +30,30 @@ export async function getGoals(params?: PageRequest) : Promise<PaginatedResponse
   return response.data;
 }
 
-export async function createGoal(input: GoalRequest ): Promise<Goal> {
+export async function createGoal(input: GoalRequest): Promise<Goal> {
   const response = await serverApi.post<Goal>("/goals", input);
   revalidatePath("/goals");
   return response.data
 }
 
-export async function updateGoal(goalId: string, input: GoalRequest ): Promise<Goal> {
-  const response = await serverApi.put<Goal>(`/goals/${goalId}`, input);
+export async function updateGoal(goalId: string, input: GoalRequest): Promise<Goal> {
+  const response = await serverApi.put<any>(`/goals/${goalId}`, input);
   revalidatePath("/goals");
-  return response.data
+  revalidatePath(`/goals/${goalId}`);
+  return response.data?.data || response.data;
 }
 
-export async function deleteGoal(goalId: string ): Promise<void> {
+export async function deleteGoal(goalId: string): Promise<void> {
   await serverApi.delete<Goal>(`/goals/${goalId}`);
   revalidatePath("/goals");
 }
 
-export async function getGoalDetails(goalId: string ): Promise<Goal> {
-  const response = await serverApi.get<Goal>(`/goals/${goalId}`);
-  return response.data;
+export async function getGoalDetails(goalId: string): Promise<Goal> {
+  const response = await serverApi.get<any>(`/goals/${goalId}`);
+  return response.data?.data || response.data;
 }
 
-export async function getGoalOptions(): Promise<GoalOptions[]>{
+export async function getGoalOptions(): Promise<GoalOptions[]> {
   const response = await serverApi.get<any>('/goals/options');
   return response.data?.data || response.data;
 }
@@ -91,7 +92,9 @@ export interface GoalRequest {
   title: string;
   description?: string;
   category: 'FINANCIAL' | 'PERSONAL' | 'BUSINESS' | 'HEALTH' | 'OTHER';
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED';
   targetValue?: number;
+  currentValue?: number;
   unit?: string;
   deadline?: string;
   projectId?: string;

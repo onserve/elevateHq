@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { Transaction } from '@/lib/api/service/finance-service';
 import { useCreateTransaction, useUpdateTransaction } from '@/lib/query/use-finance';
 import { useProjectOptions } from '@/lib/query/use-projects';
+import { useGoalOptions } from '@/lib/query/use-goals';
 import { getErrorMessage, isValidationError } from '@/lib/hooks/use-api-error';
 
 import {
@@ -37,9 +37,10 @@ const schema = z.object({
   description: z.string().min(1, 'Description is required'),
   category: z.string().min(1, 'Category is required'),
   type: z.enum(['INCOME', 'EXPENSE']),
-  date: z.string().min(1, 'Date is required'),   // sent as ISO-8601 datetime
-  account: z.string().optional(),
-  projectId: z.string().optional(),
+  date: z.string().min(1, 'Date is required'),   // sent as YYYY-MM-DD
+  account: z.string().nullable().optional(),
+  projectId: z.string().nullable().optional(),
+  goalId: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -58,51 +59,38 @@ const EXPENSE_CATEGORIES = [
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface TransactionFormProps {
-  initial?: Transaction | null;
+  transactionData?: Transaction | null;
   onSuccess?: (transaction: Transaction) => void;
   onCancel?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function TransactionForm({ initial, onSuccess, onCancel }: TransactionFormProps) {
+export function TransactionForm({ transactionData, onSuccess, onCancel }: TransactionFormProps) {
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
   const { data: projectOptions } = useProjectOptions();
+  const { data: goalOptions } = useGoalOptions();
 
-  const isEdit = !!initial;
+  const isEdit = !!transactionData;
 
-  // Default date → today at midnight, formatted for datetime-local input
-  const todayLocal = new Date().toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+  // Default date → today, formatted for date input
+  const todayLocal = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema as any),
     defaultValues: {
-      amount: initial?.amount ?? 0,
-      description: initial?.description ?? '',
-      category: initial?.category ?? '',
-      type: initial?.type ?? 'EXPENSE',
-      date: initial?.date ? initial.date.slice(0, 16) : todayLocal,
-      account: initial?.account ?? '',
-      projectId: initial?.projectId,
+      amount: transactionData?.amount ?? 0,
+      description: transactionData?.description ?? '',
+      category: transactionData?.category ?? '',
+      type: transactionData?.type ?? 'EXPENSE',
+      date: transactionData?.date ? transactionData.date.slice(0, 10) : todayLocal,
+      account: transactionData?.account ?? '',
+      projectId: transactionData?.projectId ?? null,
+      goalId: transactionData?.goalId ?? null,
     },
   });
-
-  // Sync when editing a different record
-  useEffect(() => {
-    if (initial) {
-      form.reset({
-        amount: initial.amount,
-        description: initial.description,
-        category: initial.category,
-        type: initial.type,
-        date: initial.date.slice(0, 16),
-        account: initial.account ?? '',
-        projectId: initial.projectId,
-      });
-    }
-  }, [initial, form]);
 
   const selectedType = form.watch('type');
   const categoryPresets = selectedType === 'INCOME' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -110,14 +98,15 @@ export function TransactionForm({ initial, onSuccess, onCancel }: TransactionFor
   async function onSubmit(values: FormValues) {
     const payload = {
       ...values,
-      date: new Date(values.date).toISOString(),
-      projectId: values.projectId === 'none' ? undefined : values.projectId,
-      account: values.account || undefined,
+      date: values.date,
+      projectId: values.projectId === 'none' || !values.projectId ? null : values.projectId,
+      goalId: values.goalId === 'none' || !values.goalId ? null : values.goalId,
+      account: values.account || null,
     };
 
     try {
-      if (isEdit && initial) {
-        const updated = await updateMutation.mutateAsync({ id: initial.id, input: payload });
+      if (isEdit && transactionData) {
+        const updated = await updateMutation.mutateAsync({ id: transactionData.id, input: payload });
         onSuccess?.(updated);
       } else {
         const created = await createMutation.mutateAsync(payload);
@@ -240,17 +229,17 @@ export function TransactionForm({ initial, onSuccess, onCancel }: TransactionFor
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date & Time</FormLabel>
+              <FormLabel>Date</FormLabel>
               <FormControl>
-                <Input type="datetime-local" {...field} />
+                <Input type="date" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* Account + Project (Optional) */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Account + Project + Goal (Optional) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="account"
@@ -258,7 +247,7 @@ export function TransactionForm({ initial, onSuccess, onCancel }: TransactionFor
               <FormItem>
                 <FormLabel>Account <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Chase Checking" {...field} />
+                  <Input placeholder="e.g. Chase Checking" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -272,8 +261,8 @@ export function TransactionForm({ initial, onSuccess, onCancel }: TransactionFor
               <FormItem>
                 <FormLabel>Project <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
                 <Select
-                  onValueChange={(value) => field.onChange(value === 'none' ? undefined : value)}
-                  value={field.value || 'none'}
+                  onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                  value={field.value ? String(field.value) : 'none'}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -285,6 +274,35 @@ export function TransactionForm({ initial, onSuccess, onCancel }: TransactionFor
                     {projectOptions?.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="goalId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Goal <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                  value={field.value ? String(field.value) : 'none'}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Link to goal" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {goalOptions?.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id}>
+                        {goal.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
