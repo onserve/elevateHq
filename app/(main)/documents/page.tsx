@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { DocumentListContainer } from '@/components/document/document-list-container';
+import { DocumentUploadZone } from '@/components/documents/document-upload-zone';
+import { RecentDocumentsList } from '@/components/documents/recent-documents-list';
 
 export const metadata: Metadata = {
   title: 'Smart Document Processor',
@@ -17,8 +18,14 @@ export default function DocumentsPage() {
         </p>
       </div>
 
-      {/* Hand off to client component */}
-      <DocumentListContainer />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <DocumentUploadZone />
+        </div>
+        <div className="lg:col-span-1">
+          <RecentDocumentsList />
+        </div>
+      </div>
     </div>
   );
 }

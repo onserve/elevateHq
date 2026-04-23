@@ -34,9 +34,10 @@ export function useUploadDocument() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: ({ file, source }: { file: File; source: string }) => {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('source', source);
       return uploadDocument(formData);
     },
     onSuccess: () => {

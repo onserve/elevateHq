@@ -190,7 +190,12 @@ export class ServerApiClient {
 
         // Add body for non-GET requests
         if (body && method !== 'GET') {
-          requestConfig.body = typeof body === 'string' ? body : JSON.stringify(body);
+          if (body instanceof FormData) {
+            requestConfig.body = body;
+            delete headers['Content-Type']; // Let fetch set multipart/form-data boundary
+          } else {
+            requestConfig.body = typeof body === 'string' ? body : JSON.stringify(body);
+          }
         }
 
         // Set up timeout with AbortController

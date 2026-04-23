@@ -6,18 +6,24 @@ import { UploadCloud, CheckCircle2, Loader2 } from 'lucide-react';
 import { useUploadDocument } from '@/lib/query/use-documents';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function DocumentUploadZone() {
   const router = useRouter();
   const { mutate: uploadDocument, isPending } = useUploadDocument();
   const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<string>('');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
+    if (!source) {
+      setError("Please select a document source before uploading.");
+      return;
+    }
     if (acceptedFiles.length === 0) return;
     
     const file = acceptedFiles[0];
-    uploadDocument(file, {
+    uploadDocument({ file, source }, {
       onSuccess: (data) => {
         router.push(`/documents/${data.id}`);
       },
@@ -25,7 +31,7 @@ export function DocumentUploadZone() {
          setError("Upload failed. Please try again or use a supported file type.");
       }
     });
-  }, [uploadDocument, router]);
+  }, [uploadDocument, router, source]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
@@ -40,12 +46,28 @@ export function DocumentUploadZone() {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-3">
+        <label className="text-sm font-medium leading-none">
+          Document Source <span className="text-destructive">*</span>
+        </label>
+        <Select value={source} onValueChange={(val) => { setSource(val); setError(null); }} disabled={isPending}>
+          <SelectTrigger className="w-full sm:w-[300px]">
+            <SelectValue placeholder="Select a source..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Mpesa">M-Pesa</SelectItem>
+            <SelectItem value="EquityBank">Equity Bank</SelectItem>
+            <SelectItem value="DTB">DTB</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div 
         {...getRootProps()} 
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors
+        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${!source ? 'opacity-60 cursor-not-allowed hover:border-border' : 'cursor-pointer'}
           ${isDragActive ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50'}`}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} disabled={!source || isPending} />
         
         <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-primary/10 flex items-center justify-center">
              {isPending ? (
