@@ -1,6 +1,7 @@
 'use client';
 
-import { useDocument, useExtractedTransactions, useSubmitTransactions } from '@/lib/query/use-documents';
+import { useState } from 'react';
+import { useDocument, useExtractedTransactions, useSubmitTransactions, useUnselectTransactions } from '@/lib/query/use-documents';
 import { TransactionReviewTable } from '@/components/documents/transaction-review-table';
 import { SelectedTransaction } from '@/lib/api/service/document-service';
 import { CheckCircle2, FileText, ArrowLeft, Loader2 } from 'lucide-react';
@@ -11,12 +12,34 @@ interface TransactionReviewClientProps {
 }
 
 export function TransactionReviewClient({ documentId }: TransactionReviewClientProps) {
+  const [activeTab, setActiveTab] = useState<'unselected' | 'selected'>('unselected');
+  const [page, setPage] = useState(0);
+
   const { data: document, isLoading: isLoadingDoc } = useDocument(documentId);
-  const { data: transactions = [], isLoading: isLoadingTxns } = useExtractedTransactions(documentId);
+  const { data: txData, isLoading: isLoadingTxns } = useExtractedTransactions(
+    documentId, 
+    activeTab === 'selected', 
+    page, 
+    20
+  );
+  
+  const transactions = txData?.content || [];
+  const totalPages = txData?.totalPages || 1;
+
   const { mutate: submitTransactions, isPending } = useSubmitTransactions(documentId);
+  const { mutate: unselectTransactions, isPending: isUnselecting } = useUnselectTransactions(documentId);
 
   const handleSubmit = (selectedData: SelectedTransaction[]) => {
     submitTransactions({ selectedTransactions: selectedData });
+  };
+  
+  const handleUnselect = (ids: string[]) => {
+    unselectTransactions({ extractedTransactionIds: ids });
+  };
+  
+  const handleTabChange = (tab: 'unselected' | 'selected') => {
+    setActiveTab(tab);
+    setPage(0);
   };
 
   if (isLoadingDoc || isLoadingTxns) {
@@ -89,15 +112,45 @@ export function TransactionReviewClient({ documentId }: TransactionReviewClientP
 
       {/* Review Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Review & Import</h3>
-          <p className="text-sm text-muted-foreground">Select transactions and assign goals or projects before importing.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-bold">Review & Import</h3>
+            <p className="text-sm text-muted-foreground">Select transactions and assign goals or projects before importing.</p>
+          </div>
+          
+          <div className="flex p-1 bg-muted rounded-lg w-fit">
+            <button
+              onClick={() => handleTabChange('unselected')}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                activeTab === 'unselected' 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Pending Review
+            </button>
+            <button
+              onClick={() => handleTabChange('selected')}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                activeTab === 'selected' 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Imported
+            </button>
+          </div>
         </div>
         
         <TransactionReviewTable 
           transactions={transactions} 
           onSubmit={handleSubmit}
-          isSubmitting={isPending}
+          onUnselect={handleUnselect}
+          isSubmitting={isPending || isUnselecting}
+          isViewOnly={activeTab === 'selected'}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
         />
       </div>
     </div>

@@ -25,6 +25,10 @@ export interface SelectTransactionsRequest {
   selectedTransactions: SelectedTransaction[];
 }
 
+export interface UnselectTransactionsRequest {
+  extractedTransactionIds: string[];
+}
+
 export interface DocumentRecord {
   id: string;
   filename: string;
@@ -44,8 +48,13 @@ export async function uploadDocument(formData: FormData): Promise<DocumentRecord
   return response.data?.data || response.data;
 }
 
-export async function getRecentDocuments(): Promise<DocumentRecord[]> {
-  const response = await serverApi.get<any>('/documents');
+export async function getRecentDocuments(params?: { page?: number; size?: number }): Promise<PaginatedResponse<DocumentRecord>> {
+  const queryParams = new URLSearchParams();
+  if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+  if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+  
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  const response = await serverApi.get<any>(`/documents${queryString}`);
   return response.data?.data || response.data;
 }
 
@@ -54,13 +63,32 @@ export async function getDocumentDetails(id: string): Promise<DocumentRecord> {
   return response.data?.data || response.data;
 }
 
-export async function getExtractedTransactions(documentId: string): Promise<ExtractedTransaction[]> {
-  const response = await serverApi.get<any>(`/documents/${documentId}/transactions`);
+export async function getExtractedTransactions(
+  documentId: string, 
+  params?: { page?: number; size?: number; selected?: boolean }
+): Promise<PaginatedResponse<ExtractedTransaction>> {
+  const queryParams = new URLSearchParams();
+  if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+  if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+  if (params?.selected !== undefined) queryParams.append('selected', params.selected.toString());
+  
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  const response = await serverApi.get<any>(`/documents/${documentId}/transactions${queryString}`);
   return response.data?.data || response.data;
 }
 
 export async function submitSelectedTransactions(documentId: string, request: SelectTransactionsRequest): Promise<void> {
-  const response = await serverApi.post<any>(`/documents/${documentId}/transactions/select`, request);
-  revalidatePath('/documents'); //Might be problem revalidating different path unless redirect to the page 
+  const response = await serverApi.post<any>('/documents/transactions/select', request);
+  revalidatePath('/documents');
+  revalidatePath(`/documents/${documentId}`);
+  revalidatePath('/finance');
+  return response.data?.data || response.data;
+}
+
+export async function unselectTransactions(documentId: string, request: UnselectTransactionsRequest): Promise<void> {
+  const response = await serverApi.delete<any>('/documents/transactions/unselect', { data: request });
+  revalidatePath('/documents');
+  revalidatePath(`/documents/${documentId}`);
+  revalidatePath('/finance');
   return response.data?.data || response.data;
 }

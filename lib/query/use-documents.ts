@@ -9,17 +9,19 @@ import {
   getExtractedTransactions,
   submitSelectedTransactions,
   SelectTransactionsRequest,
+  unselectTransactions,
+  UnselectTransactionsRequest,
 } from '@/lib/api/service/document-service';
 import { toast } from 'sonner';
 
-export function useRecentDocuments() {
+export function useRecentDocuments(page = 0, size = 10) {
   return useQuery({
-    queryKey: ['documents', 'recent'],
-    queryFn: () => getRecentDocuments(),
+    queryKey: ['documents', 'recent', page, size],
+    queryFn: () => getRecentDocuments({ page, size }),
     staleTime: 5 * 60 * 1000,
     refetchInterval: (query) => {
-      const data = query.state.data as DocumentRecord[] | undefined;
-      const hasProcessing = data?.some(
+      const data = query.state.data as PaginatedResponse<DocumentRecord> | undefined;
+      const hasProcessing = data?.content?.some(
         (doc) => doc.status === 'PROCESSING' || doc.status === 'UPLOADED'
       );
       return hasProcessing ? 3000 : false;
@@ -60,10 +62,10 @@ export function useUploadDocument() {
   });
 }
 
-export function useExtractedTransactions(documentId: string) {
+export function useExtractedTransactions(documentId: string, selected = false, page = 0, size = 20) {
   return useQuery({
-    queryKey: ['documents', documentId, 'transactions'],
-    queryFn: () => getExtractedTransactions(documentId),
+    queryKey: ['documents', documentId, 'transactions', selected, page, size],
+    queryFn: () => getExtractedTransactions(documentId, { selected, page, size }),
     enabled: !!documentId,
   });
 }
@@ -74,11 +76,26 @@ export function useSubmitTransactions(documentId: string) {
   return useMutation({
     mutationFn: (request: SelectTransactionsRequest) => submitSelectedTransactions(documentId, request),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       toast.success('Transactions imported successfully.');
     },
     onError: (error: ApiError) => {
       toast.error(getErrorMessage(error, 'Failed to import transactions.'));
+    },
+  });
+}
+
+export function useUnselectTransactions(documentId: string) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (request: UnselectTransactionsRequest) => unselectTransactions(documentId, request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      toast.success('Transactions unselected and reverted successfully.');
+    },
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to unselect transactions.'));
     },
   });
 }
