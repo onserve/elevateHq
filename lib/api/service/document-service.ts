@@ -3,17 +3,26 @@
 import { serverApi, PaginatedResponse } from '@/lib/api/server-api-client';
 import { revalidatePath } from 'next/cache';
 
-export interface Transaction {
+export interface ExtractedTransaction {
   id: string;
-  date: string;
-  description: string;
-  vendor?: string;
-  category?: string;
-  projectId?: string;
+  txnDate: string;
   amount: number;
-  type: 'INCOME' | 'EXPENSE';
-  confidenceScore: number;
-  confidenceLabel: 'HIGH' | 'MEDIUM' | 'LOW';
+  direction: 'CREDIT' | 'DEBIT';
+  description: string;
+  selectedForFinance: string | null;
+  parsingStatus: string;
+  createdAt: string;
+}
+
+export interface SelectedTransaction {
+  extractedTransactionId: string;
+  goalId: string | null;
+  projectId: string | null;
+  category: string | null;
+}
+
+export interface SelectTransactionsRequest {
+  selectedTransactions: SelectedTransaction[];
 }
 
 export interface DocumentRecord {
@@ -42,5 +51,16 @@ export async function getRecentDocuments(): Promise<DocumentRecord[]> {
 
 export async function getDocumentDetails(id: string): Promise<DocumentRecord> {
   const response = await serverApi.get<any>(`/documents/${id}`);
+  return response.data?.data || response.data;
+}
+
+export async function getExtractedTransactions(documentId: string): Promise<ExtractedTransaction[]> {
+  const response = await serverApi.get<any>(`/documents/${documentId}/transactions`);
+  return response.data?.data || response.data;
+}
+
+export async function submitSelectedTransactions(documentId: string, request: SelectTransactionsRequest): Promise<void> {
+  const response = await serverApi.post<any>(`/documents/${documentId}/transactions/select`, request);
+  revalidatePath('/documents'); //Might be problem revalidating different path unless redirect to the page 
   return response.data?.data || response.data;
 }

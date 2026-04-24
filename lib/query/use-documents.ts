@@ -6,6 +6,9 @@ import {
   getRecentDocuments,
   getDocumentDetails,
   DocumentRecord,
+  getExtractedTransactions,
+  submitSelectedTransactions,
+  SelectTransactionsRequest,
 } from '@/lib/api/service/document-service';
 import { toast } from 'sonner';
 
@@ -53,6 +56,29 @@ export function useUploadDocument() {
     },
     onError: (error: ApiError) => {
       toast.error(getErrorMessage(error, 'Failed to upload document.'));
+    },
+  });
+}
+
+export function useExtractedTransactions(documentId: string) {
+  return useQuery({
+    queryKey: ['documents', documentId, 'transactions'],
+    queryFn: () => getExtractedTransactions(documentId),
+    enabled: !!documentId,
+  });
+}
+
+export function useSubmitTransactions(documentId: string) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (request: SelectTransactionsRequest) => submitSelectedTransactions(documentId, request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
+      toast.success('Transactions imported successfully.');
+    },
+    onError: (error: ApiError) => {
+      toast.error(getErrorMessage(error, 'Failed to import transactions.'));
     },
   });
 }

@@ -8,41 +8,44 @@ import {
   ColumnDef,
   RowSelectionState
 } from '@tanstack/react-table';
-import { Transaction } from '@/lib/api/service/document-service';
+import { ExtractedTransaction, SelectedTransaction } from '@/lib/api/service/document-service';
 import { useProjectOptions } from '@/lib/query/use-projects';
+import { useGoalOptions } from '@/lib/query/use-goals';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Check } from 'lucide-react';
 
 const MOCK_CATEGORIES = [
   'Salary', 'Freelance', 'Software', 'Hardware', 'Travel', 'Meals', 'Office Supplies', 'Marketing'
 ];
 
 interface TransactionReviewTableProps {
-  transactions: Transaction[];
-  onSelectionChange: (selectedIds: string[]) => void;
+  transactions: ExtractedTransaction[];
+  onSubmit: (selectedData: SelectedTransaction[]) => void;
+  isSubmitting?: boolean;
 }
 
-export function TransactionReviewTable({ transactions, onSelectionChange }: TransactionReviewTableProps) {
+export function TransactionReviewTable({ transactions, onSubmit, isSubmitting }: TransactionReviewTableProps) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [typeFilter, setTypeFilter] = useState<string>('All');
-  const [editedData, setEditedData] = useState<Record<string, Partial<Transaction>>>({});
+  const [editedData, setEditedData] = useState<Record<string, Partial<SelectedTransaction>>>({});
   
   const { data: projectOptions = [] } = useProjectOptions();
+  const { data: goalOptions = [] } = useGoalOptions();
 
-  const handleEdit = (id: string, field: keyof Transaction, value: string) => {
+  const handleEdit = (id: string, field: keyof SelectedTransaction, value: string) => {
     setEditedData(prev => ({
       ...prev,
       [id]: {
         ...prev[id],
-        [field]: value
+        [field]: value === 'none' ? null : value
       }
     }));
   };
 
-  const columns = useMemo<ColumnDef<Transaction>[]>(
+  const columns = useMemo<ColumnDef<ExtractedTransaction>[]>(
     () => [
       {
         id: 'select',
@@ -63,37 +66,27 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
       },
       {
         header: 'TYPE',
-        accessorKey: 'type',
+        accessorKey: 'direction',
         cell: ({ row }) => {
-          const type = row.getValue('type') as string;
-          return type === 'INCOME' ? (
-            <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
+          const type = row.getValue('direction') as string;
+          return type === 'CREDIT' ? (
+            <ArrowUpCircle className="w-5 h-5 text-emerald-500" title="Credit / Income" />
           ) : (
-             <ArrowDownCircle className="w-5 h-5 text-rose-500" />
+             <ArrowDownCircle className="w-5 h-5 text-rose-500" title="Debit / Expense" />
           )
         }
       },
       {
         header: 'DATE',
-        accessorKey: 'date',
-        cell: ({ row }) => <span className="text-sm font-medium">{row.getValue('date')}</span>
+        accessorKey: 'txnDate',
+        cell: ({ row }) => <span className="text-sm font-medium">{row.getValue('txnDate')}</span>
       },
       {
-        header: 'DESCRIPTION / VENDOR',
+        header: 'DESCRIPTION',
         accessorKey: 'description',
         cell: ({ row }) => (
-           <div>
-             <div className="font-bold text-sm">{row.getValue('description')}</div>
-             <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-               {row.original.vendor} 
-               <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                 row.original.confidenceLabel === 'HIGH' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 
-                 row.original.confidenceLabel === 'MEDIUM' ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : 
-                 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400'
-               }`}>
-                 {row.original.confidenceLabel}
-               </span>
-             </div>
+           <div className="font-bold text-sm max-w-[200px] truncate" title={row.getValue('description')}>
+             {row.getValue('description')}
            </div>
         )
       },
@@ -102,13 +95,14 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
         id: 'category',
         cell: ({ row }) => {
            const id = row.original.id;
-           const value = editedData[id]?.category || row.original.category || '';
+           const value = editedData[id]?.category || '';
            return (
              <Select value={value} onValueChange={(val) => handleEdit(id, 'category', val)}>
-               <SelectTrigger className="w-[140px] h-8 text-xs border-0 bg-muted/30">
-                 <SelectValue placeholder="Select..." />
+               <SelectTrigger className="w-[120px] h-8 text-xs border-0 bg-muted/30">
+                 <SelectValue placeholder="Category..." />
                </SelectTrigger>
                <SelectContent>
+                 <SelectItem value="none">None</SelectItem>
                  {MOCK_CATEGORIES.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                  ))}
@@ -118,19 +112,41 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
         }
       },
       {
-        header: 'PROJECT / TAG',
+        header: 'PROJECT',
         id: 'project',
         cell: ({ row }) => {
            const id = row.original.id;
-           const value = editedData[id]?.projectId || row.original.projectId || '';
+           const value = editedData[id]?.projectId || '';
            return (
              <Select value={value} onValueChange={(val) => handleEdit(id, 'projectId', val)}>
-               <SelectTrigger className="w-[140px] h-8 text-xs border-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+               <SelectTrigger className="w-[120px] h-8 text-xs border-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                  <SelectValue placeholder="Project..." />
                </SelectTrigger>
                <SelectContent>
+                 <SelectItem value="none">None</SelectItem>
                  {projectOptions.map(p => (
                     <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
+           )
+        }
+      },
+      {
+        header: 'GOAL',
+        id: 'goal',
+        cell: ({ row }) => {
+           const id = row.original.id;
+           const value = editedData[id]?.goalId || '';
+           return (
+             <Select value={value} onValueChange={(val) => handleEdit(id, 'goalId', val)}>
+               <SelectTrigger className="w-[120px] h-8 text-xs border-0 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                 <SelectValue placeholder="Goal..." />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="none">None</SelectItem>
+                 {goalOptions.map(g => (
+                    <SelectItem key={g.id} value={g.id.toString()}>{g.title}</SelectItem>
                  ))}
                </SelectContent>
              </Select>
@@ -142,8 +158,8 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
         accessorKey: 'amount',
         cell: ({ row }) => {
            const amount = row.getValue('amount') as number;
-           const type = row.getValue('type') as string;
-           const isIncome = type === 'INCOME';
+           const type = row.getValue('direction') as string;
+           const isIncome = type === 'CREDIT';
            return (
              <div className="text-right pr-4">
                <span className={`font-bold ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
@@ -154,12 +170,12 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
         }
       }
     ],
-    [projectOptions, editedData]
+    [projectOptions, goalOptions, editedData]
   );
 
   const filteredData = useMemo(() => {
     if (typeFilter === 'All') return transactions;
-    return transactions.filter(t => t.type === typeFilter);
+    return transactions.filter(t => t.direction === typeFilter);
   }, [transactions, typeFilter]);
 
   const table = useReactTable({
@@ -172,37 +188,50 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
     },
   });
 
-  // Effect to notify parent of selection changes
-  useEffect(() => {
-    const selectedIds = Object.keys(rowSelection)
-      .filter(k => rowSelection[k])
-      .map(k => table.getRowModel().rowsById[k]?.original.id)
-      .filter(Boolean); // Filter undefined just in case
+  const handleImportSelected = () => {
+    const selectedIds = Object.keys(rowSelection).filter(k => rowSelection[k]);
+    if (selectedIds.length === 0) return;
+
+    const selectedData: SelectedTransaction[] = selectedIds.map(rowId => {
+      // rowId is the index in the filteredData array, we need the actual original.id
+      const actualId = table.getRowModel().rowsById[rowId]?.original.id;
+      if (!actualId) return null;
       
-    onSelectionChange(selectedIds);
-  }, [rowSelection, onSelectionChange, table]);
+      const edits = editedData[actualId] || {};
+      return {
+        extractedTransactionId: actualId,
+        goalId: edits.goalId || null,
+        projectId: edits.projectId || null,
+        category: edits.category || null,
+      };
+    }).filter(Boolean) as SelectedTransaction[];
+
+    onSubmit(selectedData);
+  };
+
+  const selectedCount = Object.keys(rowSelection).filter(k => rowSelection[k]).length;
 
   return (
     <div className="space-y-4">
       {/* Filters and Selection */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground mr-1">Quick Select:</span>
           <Button variant="outline" size="sm" onClick={() => table.toggleAllPageRowsSelected(true)} className="rounded-full h-8 text-xs font-semibold">Select All</Button>
           <Button variant="outline" size="sm" onClick={() => {
              const newSelection: Record<string, boolean> = {};
              table.getRowModel().rows.forEach(row => {
-               if (row.original.type === 'INCOME') newSelection[row.id] = true;
+               if (row.original.direction === 'CREDIT') newSelection[row.id] = true;
              });
              setRowSelection(newSelection);
-          }} className="rounded-full h-8 text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950 dark:hover:bg-emerald-900 border-emerald-200">All Income</Button>
+          }} className="rounded-full h-8 text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950 dark:hover:bg-emerald-900 border-emerald-200">All Credits</Button>
           <Button variant="outline" size="sm" onClick={() => {
              const newSelection: Record<string, boolean> = {};
              table.getRowModel().rows.forEach(row => {
-               if (row.original.type === 'EXPENSE') newSelection[row.id] = true;
+               if (row.original.direction === 'DEBIT') newSelection[row.id] = true;
              });
              setRowSelection(newSelection);
-          }} className="rounded-full h-8 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 dark:hover:bg-rose-900 border-rose-200">All Expenses</Button>
+          }} className="rounded-full h-8 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 dark:hover:bg-rose-900 border-rose-200">All Debits</Button>
         </div>
         
         <div className="flex items-center gap-3">
@@ -213,16 +242,26 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
             </SelectTrigger>
             <SelectContent>
                <SelectItem value="All">All Types</SelectItem>
-               <SelectItem value="INCOME">Income</SelectItem>
-               <SelectItem value="EXPENSE">Expenses</SelectItem>
+               <SelectItem value="CREDIT">Credits</SelectItem>
+               <SelectItem value="DEBIT">Debits</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
+      {/* Action Bar */}
+      {selectedCount > 0 && (
+        <div className="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-lg p-3 px-4 animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-sm font-semibold text-primary">{selectedCount} transactions selected</span>
+          <Button onClick={handleImportSelected} disabled={isSubmitting} size="sm">
+            {isSubmitting ? 'Importing...' : 'Import Selected'} <Check className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
-      <div className="border border-border/80 rounded-xl bg-card overflow-hidden shadow-sm">
-        <Table>
+      <div className="border border-border/80 rounded-xl bg-card overflow-hidden shadow-sm overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader className="bg-muted/40">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-border/60">
@@ -250,7 +289,7 @@ export function TransactionReviewTable({ transactions, onSelectionChange }: Tran
                   className="hover:bg-muted/30 border-border/60 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3.5">
+                    <TableCell key={cell.id} className="py-3">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
