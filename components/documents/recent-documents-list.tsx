@@ -11,7 +11,8 @@ export function RecentDocumentsList() {
     return <div className="p-6 border rounded-xl animate-pulse bg-muted/20 h-[500px]" />;
   }
 
-  const documents = data || [];
+  const documents = data?.content || [];
+  const totalPages = data?.totalPages || 1;
 
   return (
     <div className="border border-border rounded-xl bg-card h-full flex flex-col min-h-[500px]">
