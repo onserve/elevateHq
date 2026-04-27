@@ -5,6 +5,7 @@ import { DashboardShell } from '@/components/dashboard/shell';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { MobileNav } from '@/components/dashboard/mobile-nav';
+import { AiAssistantFloat } from '@/components/agent/ai-assistant-float';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -112,6 +113,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
         - Client Component for interactivity
       */}
       <MobileNav />
+
+      {/* Global AI Assistant Float */}
+      <AiAssistantFloat />
     </DashboardShell>
   );
 }
