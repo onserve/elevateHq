@@ -1,19 +1,21 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Target, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Project } from '@/lib/api/service/project-service';
+import { GoalCard } from '@/components/goal/goal-card';
 
 interface ProjectGoalsTabProps {
-  projectId: string;
+  project: Project;
 }
 
-export function ProjectGoalsTab({ projectId }: ProjectGoalsTabProps) {
-  // Placeholder data - would be fetched based on projectId
-  const goals = [];
-  const totalGoals = 0;
-  const onTrack = 0;
-  const atRisk = 0;
-  const completed = 0;
+export function ProjectGoalsTab({ project }: ProjectGoalsTabProps) {
+  const goals = project.goals || [];
+  
+  const totalGoals = goals.length;
+  const onTrack = goals.filter((g) => g.status === 'IN_PROGRESS').length;
+  const atRisk = goals.filter((g) => g.status === 'NOT_STARTED').length; // Simplification
+  const completed = goals.filter((g) => g.status === 'COMPLETED').length;
 
   return (
     <div className="space-y-6">
@@ -30,7 +32,7 @@ export function ProjectGoalsTab({ projectId }: ProjectGoalsTabProps) {
         {/* On Track */}
         <Card className="border border-border bg-card shadow-sm">
           <CardContent className="pt-4 lg:pt-6">
-            <p className="text-xs lg:text-sm text-muted-foreground mb-2">On Track</p>
+            <p className="text-xs lg:text-sm text-muted-foreground mb-2">In Progress</p>
             <div className="flex items-baseline gap-2">
               <p className="text-2xl lg:text-3xl font-bold text-accent">{onTrack}</p>
               <CheckCircle2 className="h-4 lg:h-5 w-4 lg:w-5 text-accent flex-shrink-0" />
@@ -38,10 +40,10 @@ export function ProjectGoalsTab({ projectId }: ProjectGoalsTabProps) {
           </CardContent>
         </Card>
 
-        {/* At Risk */}
+        {/* Not Started / At Risk */}
         <Card className="border border-border bg-card shadow-sm">
           <CardContent className="pt-4 lg:pt-6">
-            <p className="text-xs lg:text-sm text-muted-foreground mb-2">At Risk</p>
+            <p className="text-xs lg:text-sm text-muted-foreground mb-2">Not Started</p>
             <div className="flex items-baseline gap-2">
               <p className="text-2xl lg:text-3xl font-bold text-amber-600">{atRisk}</p>
               <AlertCircle className="h-4 lg:h-5 w-4 lg:w-5 text-amber-600 flex-shrink-0" />
@@ -73,12 +75,8 @@ export function ProjectGoalsTab({ projectId }: ProjectGoalsTabProps) {
         </Card>
       ) : (
         <div className="space-y-3">
-          {goals.map((goal, index) => (
-            <Card key={index} className="border border-border bg-card">
-              <CardContent className="pt-6">
-                <p className="font-semibold text-foreground">{goal.title}</p>
-              </CardContent>
-            </Card>
+          {goals.map((goal) => (
+            <GoalCard key={goal.id} goal={goal} />
           ))}
         </div>
       )}

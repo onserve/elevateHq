@@ -52,9 +52,9 @@ export function ProjectDetailTabs({
       {/* Tab Content */}
       <div>
         {activeTab === 'overview' && <ProjectOverviewTab project={project} />}
-        {activeTab === 'tasks' && <ProjectTasksTab projectId={project.id.toString()} />}
+        {activeTab === 'tasks' && <ProjectTasksTab project={project} />}
         {activeTab === 'finance' && <ProjectFinanceTab project={project} />}
-        {activeTab === 'goals' && <ProjectGoalsTab projectId={project.id.toString()} />}
+        {activeTab === 'goals' && <ProjectGoalsTab project={project} />}
       </div>
     </div>
   );

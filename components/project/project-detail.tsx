@@ -7,7 +7,10 @@ import { Project } from '@/lib/api/service/project-service';
 import { Button } from '@/components/ui/button';
 import { ProjectDetailHeader } from './project-detail-header';
 import { ProjectDetailTabs } from './project-detail-tabs';
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ProjectForm } from './project-form';
+import { TaskForm } from '@/components/task/task-form';
+import type { Task } from '@/lib/api/service/task-service';
 interface ProjectDetailProps {
   project: Project;
   projectId: string;
@@ -17,6 +20,8 @@ export function ProjectDetail({ project, projectId }: ProjectDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'finance' | 'goals'>(
     'overview'
   );
+  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -72,11 +77,11 @@ export function ProjectDetail({ project, projectId }: ProjectDetailProps) {
 
           {/* Action Buttons - Stack on mobile, flex on desktop */}
           <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap w-full lg:w-auto">
-            <Button variant="outline" className="h-10 flex-1 lg:flex-none">
+            <Button variant="outline" className="h-10 flex-1 lg:flex-none" onClick={() => setIsEditProjectOpen(true)}>
               <Edit2 className="h-4 w-4 mr-2" />
               Edit Project
             </Button>
-            <Button className="h-10 flex-1 lg:flex-none bg-accent hover:bg-accent/90">
+            <Button className="h-10 flex-1 lg:flex-none bg-accent hover:bg-accent/90" onClick={() => setIsAddTaskOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Task
             </Button>
@@ -92,6 +97,34 @@ export function ProjectDetail({ project, projectId }: ProjectDetailProps) {
 
       {/* Tabs */}
       <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} project={project} />
+
+      {/* Edit Project Dialog */}
+      <Dialog open={isEditProjectOpen} onOpenChange={setIsEditProjectOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+          </DialogHeader>
+          <ProjectForm 
+            initial={project} 
+            onSuccess={() => setIsEditProjectOpen(false)} 
+            onCancel={() => setIsEditProjectOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Task Dialog */}
+      <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add Task to {project.name}</DialogTitle>
+          </DialogHeader>
+          <TaskForm 
+            taskData={{ projectId: project.id } as unknown as Task} 
+            onSuccess={() => setIsAddTaskOpen(false)} 
+            onCancel={() => setIsAddTaskOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
