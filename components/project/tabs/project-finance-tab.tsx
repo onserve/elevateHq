@@ -2,7 +2,8 @@
 
 import { Project } from '@/lib/api/service/project-service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { TransactionCard } from '@/components/finance/transaction-card';
 
 interface ProjectFinanceTabProps {
   project: Project;
@@ -10,7 +11,12 @@ interface ProjectFinanceTabProps {
 
 export function ProjectFinanceTab({ project }: ProjectFinanceTabProps) {
   const budget = project.budget || 0;
-  const spent = 0; // Placeholder
+  const transactions = project.financeTransactions || [];
+  
+  const spent = transactions
+    .filter((t) => t.type === 'EXPENSE')
+    .reduce((sum, t) => sum + t.amount, 0);
+
   const remaining = budget - spent;
   const spentPercentage = budget > 0 ? Math.round((spent / budget) * 100) : 0;
 
@@ -66,17 +72,24 @@ export function ProjectFinanceTab({ project }: ProjectFinanceTabProps) {
         </Card>
       </div>
 
-      {/* Spending Chart Placeholder */}
-      <Card className="border border-border bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Spending Over Time</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="py-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
-            <p className="text-muted-foreground">Chart visualization will appear here</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Transactions List */}
+      <h3 className="text-lg font-semibold mt-8 mb-4">Transactions</h3>
+      {transactions.length === 0 ? (
+        <Card className="border border-border bg-card">
+          <CardContent className="pt-6">
+            <div className="py-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
+              <DollarSign className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-40" />
+              <p className="text-muted-foreground">No transactions recorded for this project</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {transactions.map((transaction) => (
+            <TransactionCard key={transaction.id} transaction={transaction} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { PaginatedResponse } from '@/lib/api/server-api-client';
 
 import { serverApi } from '@/lib/api/server-api-client';
 import { revalidatePath } from 'next/cache';
+import type { Task } from './task-service';
+import type { Goal } from './goal-service';
+import type { Transaction } from './finance-service';
 
 
 export async function createProject(input: ProjectRequest): Promise<Project> {
@@ -91,6 +94,9 @@ export interface Project {
   progress: number;
   budget?: number;
   tags?: string[];
+  tasks?: Task[];
+  goals?: Goal[];
+  financeTransactions?: Transaction[];
   createdAt: string;
   updatedAt: string;
 }
