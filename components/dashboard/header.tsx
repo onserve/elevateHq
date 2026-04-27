@@ -3,6 +3,7 @@ import { Session } from 'next-auth';
 import { Search } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationBell } from './notification-bell';
+import { AiAssistantMobileTrigger } from '@/components/agent/ai-assistant-float';
 
 interface DashboardHeaderProps {
   session: Session;
@@ -38,6 +39,7 @@ export async function DashboardHeader({ session }: DashboardHeaderProps) {
           <span className="font-bold text-foreground">Life Admin</span>
         </div>
         <div className="flex items-center gap-2">
+          <AiAssistantMobileTrigger />
           <NotificationBell />
         </div>
       </div>
