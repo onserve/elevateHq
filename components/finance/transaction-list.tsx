@@ -34,8 +34,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ListPagination } from '@/components/shared/list-pagination';
 
 import { TransactionForm } from './transaction-form';
+
+const PAGE_SIZE = 20;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -58,11 +61,12 @@ interface TransactionListProps {
 export function TransactionList({ initialData }: TransactionListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | TransactionType>('ALL');
+  const [page, setPage] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
 
-  const { data } = useTransactions({ page: 0, size: 50 }, initialData);
+  const { data } = useTransactions({ page, size: PAGE_SIZE }, initialData);
   const deleteTransaction = useDeleteTransaction();
 
   // Fetch full transaction details when an edit is requested
@@ -74,6 +78,9 @@ export function TransactionList({ initialData }: TransactionListProps) {
       setIsFormOpen(true);
     }
   }, [editingTransactionId, transactionDetails, isTransactionLoading]);
+
+  // Reset to page 0 whenever search or filter changes
+  useEffect(() => { setPage(0); }, [searchQuery, typeFilter]);
 
   const allTransactions = data?.content || initialData?.content || [];
 
@@ -314,6 +321,14 @@ export function TransactionList({ initialData }: TransactionListProps) {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {data && (
+        <ListPagination
+          data={data}
+          onPageChange={setPage}
+        />
+      )}
 
       {/* Create / Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={handleDialogClose}>

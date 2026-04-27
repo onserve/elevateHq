@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Trash2, Calendar, Layout, BarChart3, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { useProjects, useDeleteProject } from '@/lib/query/use-projects';
@@ -9,7 +9,10 @@ import { ProjectListview, Project } from '@/lib/api/service/project-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ListPagination } from '@/components/shared/list-pagination';
 import { ProjectForm } from './project-form';
+
+const PAGE_SIZE = 12; // 3-col grid, 4 rows
 
 interface ProjectListProps {
   initialData: PaginatedResponse<ProjectListview>;
@@ -17,12 +20,16 @@ interface ProjectListProps {
 
 export function ProjectList({ initialData }: ProjectListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   // Client-side syncing with initial data hand-off [6, 7]
-  const { data } = useProjects({ page: 0, size: 10 }, initialData);
+  const { data } = useProjects({ page, size: PAGE_SIZE }, initialData);
   const deleteProject = useDeleteProject();
+
+  // Reset to page 0 whenever search changes
+  useEffect(() => { setPage(0); }, [searchQuery]);
 
   const allProjects = data?.content || initialData?.content || [];
 
@@ -123,6 +130,14 @@ export function ProjectList({ initialData }: ProjectListProps) {
           </Link>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {data && (
+        <ListPagination
+          data={data}
+          onPageChange={setPage}
+        />
       )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>

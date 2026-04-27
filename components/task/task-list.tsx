@@ -11,8 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ListPagination } from '@/components/shared/list-pagination';
 
 import { TaskForm } from './task-form';
+
+const PAGE_SIZE = 10;
 
 interface TaskListProps {
   initialData: PaginatedResponse<Task>;
@@ -20,11 +23,12 @@ interface TaskListProps {
 
 export function TaskList({ initialData }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
 
-  const { data } = useTasks({ page: 0, size: 10 }, initialData);
+  const { data } = useTasks({ page, size: PAGE_SIZE }, initialData);
   const deleteTask = useDeleteTask();
 
   // Fetch full task details when an edit is requested
@@ -36,6 +40,9 @@ export function TaskList({ initialData }: TaskListProps) {
       setIsFormOpen(true);
     }
   }, [editingTaskId, taskDetails, isTaskLoading]);
+
+  // Reset to page 0 whenever search changes
+  useEffect(() => { setPage(0); }, [searchQuery]);
 
   const allTasks = data?.content || initialData?.content || [];
 
@@ -176,6 +183,14 @@ export function TaskList({ initialData }: TaskListProps) {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {data && (
+        <ListPagination
+          data={data}
+          onPageChange={setPage}
+        />
+      )}
 
       {/* Dialog for Create/Edit Task */}
       <Dialog open={isFormOpen} onOpenChange={handleDialogClose}>

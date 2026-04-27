@@ -69,7 +69,7 @@ export async function getTransactions(
     const sortArray = Array.isArray(params.sort) ? params.sort : [params.sort];
     sortArray.forEach((sortItem) => queryParams.append('sort', sortItem));
   } else {
-    queryParams.append('sort', 'date,desc');
+    queryParams.append('sort', 'createdAt,desc');
   }
 
   if (params) {

@@ -138,7 +138,7 @@ export class ServerApiClient {
 
       if (response.status === 401) {
         console.log('[API Client] 401 from backend, redirecting to signout');
-        redirect('/api/auth/signout?callbackUrl=/'); // ✅ same here
+        redirect('/api/auth/signout?callbackUrl=/');
       }
 
       const errorMessage =
@@ -148,7 +148,7 @@ export class ServerApiClient {
     }
 
     return {
-      data,
+      data: data?.data !== undefined ? data.data : data,
       status: response.status,
       message: data?.message,
     };
