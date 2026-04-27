@@ -27,7 +27,7 @@ export default async function FinancePage({
   const initialData = await getTransactions({
     page,
     size,
-    sort: params.sort || 'date,desc',
+    sort: params.sort || 'txnDate,desc',
     type: params.type,
     category: params.category as TransactionCategory | undefined,
     startDate: params.startDate,

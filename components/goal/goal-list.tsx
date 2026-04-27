@@ -8,15 +8,19 @@ import { Goal } from '@/lib/api/service/goal-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ListPagination } from '@/components/shared/list-pagination';
 import { GoalForm } from './goal-form';
+
+const PAGE_SIZE = 10;
 
 export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal> }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [deletingGoal, setDeletingGoal] = useState<Goal | null>(null);
 
-  const { data } = useGetGoals({ page: 0, size: 10 }, initialData);
+  const { data } = useGetGoals({ page, size: PAGE_SIZE }, initialData);
   const deleteGoal = useDeleteGoal();
 
   const { data: goalDetails, isLoading: isGoalLoading } = useGoalDetails(editingGoalId ?? undefined);
@@ -26,6 +30,9 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
       setIsFormOpen(true);
     }
   }, [editingGoalId, goalDetails, isGoalLoading]);
+
+  // Reset to page 0 whenever search changes
+  useEffect(() => { setPage(0); }, [searchQuery]);
 
   const allGoals = data?.content || initialData?.content || [];
 
@@ -132,6 +139,14 @@ export function GoalList({ initialData }: { initialData: PaginatedResponse<Goal>
             );
           })}
         </div>
+      )}
+
+      {/* Pagination */}
+      {data && (
+        <ListPagination
+          data={data}
+          onPageChange={setPage}
+        />
       )}
 
       <Dialog open={isFormOpen} onOpenChange={handleDialogClose}>
