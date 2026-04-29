@@ -73,7 +73,7 @@ export function useUpdateProject() {
   });
 }
 
-export function useDeleteProject(projectId: string) {
+export function useDeleteProject() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (projectId: string) => deleteProject(projectId),

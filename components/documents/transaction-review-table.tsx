@@ -95,9 +95,13 @@ export function TransactionReviewTable({
         cell: ({ row }) => {
           const type = row.getValue('direction') as string;
           return type === 'CREDIT' ? (
-            <ArrowUpCircle className="w-5 h-5 text-emerald-500" title="Credit / Income" />
+            <span title="Credit / Income" className="flex items-center">
+              <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
+            </span>
           ) : (
-             <ArrowDownCircle className="w-5 h-5 text-rose-500" title="Debit / Expense" />
+             <span title="Debit / Expense" className="flex items-center">
+               <ArrowDownCircle className="w-5 h-5 text-rose-500" />
+             </span>
           )
         }
       },
@@ -169,7 +173,7 @@ export function TransactionReviewTable({
            const id = row.original.id;
            const value = editedData[id]?.goalId || '';
            if (isViewOnly) {
-             const goalName = goalOptions.find(g => g.id === row.original.goalId)?.title;
+             const goalName = goalOptions.find(g => g.id === row.original.goalId)?.name;
              return <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{goalName || '—'}</span>;
            }
            return (

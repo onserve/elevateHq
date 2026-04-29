@@ -12,6 +12,9 @@ export interface ExtractedTransaction {
   selectedForFinance: string | null;
   parsingStatus: string;
   createdAt: string;
+  category?: string | null;
+  projectId?: string | null;
+  goalId?: string | null;
 }
 
 export interface SelectedTransaction {

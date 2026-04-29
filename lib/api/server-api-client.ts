@@ -273,8 +273,8 @@ export class ServerApiClient {
   /**
    * DELETE request
    */
-  async delete<T>(endpoint: string, config?: RequestConfig): Promise<ApiResponse<T>> {
-    return this.makeRequest<T>('DELETE', endpoint, undefined, config);
+  async delete<T>(endpoint: string, config?: RequestConfig & { data?: any }): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>('DELETE', endpoint, config?.data, config);
   }
 }
 

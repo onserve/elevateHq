@@ -37,8 +37,8 @@ export interface TaskRequest {
   status: "COMPLETED" | "CANCELLED" | "TODO" | "IN_PROGRESS"
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   dueDate?: string
-  projectId?: string
-  goalId?: string
+  projectId?: string | null
+  goalId?: string | null
   tags?: string[]
 }
 
