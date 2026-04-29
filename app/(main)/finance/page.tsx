@@ -1,6 +1,6 @@
 import { getTransactions } from '@/lib/api/service/finance-service';
 import { TransactionList } from '@/components/finance/transaction-list';
-import type { TransactionType, TransactionCategory } from '@/lib/api/service/finance-service';
+import type { TransactionType } from '@/lib/api/service/finance-service';
 
 export default async function FinancePage({
   searchParams,
@@ -29,7 +29,7 @@ export default async function FinancePage({
     size,
     sort: params.sort || 'txnDate,desc',
     type: params.type,
-    category: params.category as TransactionCategory | undefined,
+    category: params.category as string | undefined,
     startDate: params.startDate,
     endDate: params.endDate,
   });
