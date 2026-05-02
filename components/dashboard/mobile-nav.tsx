@@ -21,7 +21,7 @@ const mobileNav = [
     id: 'projects',
     name: 'Projects',
     icon: Briefcase,
-    href: 'projects',
+    href: '/projects',
   },
   {
     id: 'document',
@@ -33,7 +33,7 @@ const mobileNav = [
     id: 'tasks',
     name: 'Tasks',
     icon: CheckSquare,
-    href: 'tasks',
+    href: '/tasks',
   },
   {
     id: 'settings',
