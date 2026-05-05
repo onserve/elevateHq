@@ -59,12 +59,6 @@ const navigation = [
     href: '/tasks',
   },
   {
-    id: 'profile',
-    name: 'Profile',
-    icon: User,
-    href: '/profile',
-  },
-  {
     id: 'settings',
     name: 'Settings',
     icon: Settings,

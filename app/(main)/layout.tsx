@@ -6,6 +6,7 @@ import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { MobileNav } from '@/components/dashboard/mobile-nav';
 import { AiAssistantFloat } from '@/components/agent/ai-assistant-float';
+import { FeedbackWidget } from '@/components/feedback/feedback-widget';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -116,6 +117,9 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
       {/* Global AI Assistant Float */}
       <AiAssistantFloat />
+
+      {/* Global Feedback & Updates Widget */}
+      <FeedbackWidget />
     </DashboardShell>
   );
 }
