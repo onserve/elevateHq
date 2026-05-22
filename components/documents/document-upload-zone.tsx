@@ -19,14 +19,14 @@ export function DocumentUploadZone() {
       return;
     }
     if (acceptedFiles.length === 0) return;
-    
+
     const file = acceptedFiles[0];
     uploadDocument({ file, source }, {
       onSuccess: () => {
         setSource('');
       },
       onError: () => {
-         setError("Upload failed. Please try again or use a supported file type.");
+        setError("Upload failed. Please try again or use a supported file type.");
       }
     });
   }, [uploadDocument, source]);
@@ -53,33 +53,33 @@ export function DocumentUploadZone() {
             <SelectValue placeholder="Select a source..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Mpesa">M-Pesa</SelectItem>
-            <SelectItem value="EquityBank">Equity Bank</SelectItem>
-            <SelectItem value="DTB">DTB</SelectItem>
+            <SelectItem value="MPESA">M-Pesa</SelectItem>
+            <SelectItem value="BANK_STATEMENT">Bank Statement</SelectItem>
+            <SelectItem value="AIRTEL">AIRTEL</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div 
-        {...getRootProps()} 
+      <div
+        {...getRootProps()}
         className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${!source ? 'opacity-60 cursor-not-allowed hover:border-border' : 'cursor-pointer'}
           ${isDragActive ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50'}`}
       >
         <input {...getInputProps()} disabled={!source || isPending} />
-        
+
         <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-             {isPending ? (
-                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-             ) : (
-                 <UploadCloud className="w-8 h-8 text-primary" />
-             )}
+          {isPending ? (
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          ) : (
+            <UploadCloud className="w-8 h-8 text-primary" />
+          )}
         </div>
-        
+
         <h3 className="text-xl font-bold mb-2">
           {isDragActive ? "Drop the file here..." : "Drop files here or click to upload"}
         </h3>
         <p className="text-muted-foreground mb-6">Supports PDF, PNG, and JPG files</p>
-        
+
         <Button onClick={(e) => { e.preventDefault(); open(); }} size="lg" disabled={isPending} className="bg-foreground text-background hover:bg-foreground/90">
           <UploadCloud className="w-4 h-4 mr-2" />
           Choose Files

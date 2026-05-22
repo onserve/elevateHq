@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User, Settings, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +19,7 @@ interface UserMenuProps {
   name: string;
   email: string;
   image?: string | null;
+  userRoles?: string[];
 }
 
 /**
@@ -42,7 +43,7 @@ interface UserMenuProps {
  *   → passes to Sidebar
  *   → passes to UserMenu as props
  */
-export function UserMenu({ name, email, image }: UserMenuProps) {
+export function UserMenu({ name, email, image, userRoles = [] }: UserMenuProps) {
   // Local state for loading indicator
   const [isLoading, setIsLoading] = useState(false);
 
@@ -111,6 +112,24 @@ export function UserMenu({ name, email, image }: UserMenuProps) {
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
+
+          {userRoles.some((r) => ['admin', 'super-admin'].includes(r)) && (
+            <DropdownMenuItem>
+              <Shield className="mr-2 h-4 w-4" />
+              Admin Area
+            </DropdownMenuItem>
+          )}
+
+          {userRoles.includes('super-admin') && (
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4 text-sidebar-foreground/70" />
+              Admin Settings
+            </DropdownMenuItem>
+          )}
+
+          {(userRoles.some((r) => ['admin', 'super-admin'].includes(r))) && (
+            <DropdownMenuSeparator />
+          )}
 
           <DropdownMenuItem onClick={handleSignOut} disabled={isLoading}>
             <LogOut className="mr-2 h-4 w-4" />

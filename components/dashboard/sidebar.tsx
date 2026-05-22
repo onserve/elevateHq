@@ -25,6 +25,8 @@ interface DashboardSidebarProps {
  * - Best performance + interactivity
  */
 export function DashboardSidebar({ session }: DashboardSidebarProps) {
+  const userRoles = session?.user?.roles || [];
+
   return (
     <aside className="hidden lg:flex lg:flex-col w-64 border-r bg-sidebar">
       {/* 
@@ -44,7 +46,7 @@ export function DashboardSidebar({ session }: DashboardSidebarProps) {
         - Needs usePathname() to highlight active link
         - This boundary means: "hydrate this part on client"
       */}
-      <SidebarNav />
+      <SidebarNav userRoles={userRoles} />
 
       {/* 
         SECTION 3: User Menu (Client Component Island)
@@ -55,6 +57,7 @@ export function DashboardSidebar({ session }: DashboardSidebarProps) {
         name={session.user.name || 'User'}
         email={session.user.email || ''}
         image={session.user.image}
+        userRoles={userRoles}
       />
     </aside>
   );

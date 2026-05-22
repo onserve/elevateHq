@@ -12,6 +12,7 @@ import {
   File,
   User,
   Settings,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -64,6 +65,12 @@ const navigation = [
     icon: Settings,
     href: '/settings',
   },
+  {
+    id: 'admin',
+    name: 'Admin Area',
+    icon: Shield,
+    href: '/admin',
+  },
 ];
 
 /**
@@ -84,13 +91,20 @@ const navigation = [
  * - Navigation is static data (no API calls)
  * - Client-side routing = instant navigation
  */
-export function SidebarNav() {
+export function SidebarNav({ userRoles = [] }: { userRoles?: string[] }) {
   // Get current pathname - this hook requires "use client"
   const pathname = usePathname();
 
+  const isAdmin = userRoles.some(role => ['admin', 'super-admin'].includes(role));
+  
+  const filteredNavigation = navigation.filter(item => {
+    if (item.id === 'admin') return isAdmin;
+    return true;
+  });
+
   return (
     <nav className="flex-1 p-4 space-y-2">
-      {navigation.map((item) => {
+      {filteredNavigation.map((item) => {
         const Icon = item.icon;
 
         // Check if this nav item is currently active

@@ -134,9 +134,9 @@ export default {
           if (!hasAccess) {
             console.warn(
               `[Access Denied] User: ${auth.user.email}, ` +
-                `Path: ${pathname}, ` +
-                `User Roles: [${userRoles.join(', ')}], ` +
-                `Required: [${allowedRoles.join(', ')}]`,
+              `Path: ${pathname}, ` +
+              `User Roles: [${userRoles.join(', ')}], ` +
+              `Required: [${allowedRoles.join(', ')}]`,
             );
           }
 
