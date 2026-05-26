@@ -69,7 +69,7 @@ export function TransactionReviewClient({ documentId }: TransactionReviewClientP
       <div>
         <Link href="/documents" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Documents
+          Back to Statements
         </Link>
       </div>
 

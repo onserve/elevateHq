@@ -3,7 +3,7 @@ import { DocumentUploadZone } from '@/components/documents/document-upload-zone'
 import { RecentDocumentsList } from '@/components/documents/recent-documents-list';
 
 export const metadata: Metadata = {
-  title: 'Smart Document Processor',
+  title: 'Smart Statement Processor',
   description: 'Upload financial statements and invoices to extract transactions automatically',
 };
 

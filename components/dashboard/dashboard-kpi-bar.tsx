@@ -20,7 +20,7 @@ export function DashboardKpiBar() {
         isLoading={isLoading}
       />
       <KpiCard
-        label="Documents"
+        label="Statements"
         value={stats?.totalDocuments ?? '—'}
         subtitle={
           stats ? `${stats.processingDocuments} processing now` : 'Loading...'

@@ -117,7 +117,7 @@ export function DashboardDocumentsFeed() {
             <div className="p-1.5 bg-accent/10 rounded-lg">
               <FileText className="h-4 w-4 text-accent" />
             </div>
-            <span className="font-semibold text-foreground">Documents</span>
+            <span className="font-semibold text-foreground">Statements</span>
           </div>
           <Link
             href="/documents"

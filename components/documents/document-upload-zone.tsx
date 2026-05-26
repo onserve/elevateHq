@@ -86,7 +86,7 @@ export function DocumentUploadZone() {
     <div className="space-y-6">
       <div className="space-y-3">
         <label className="text-sm font-medium leading-none">
-          Document Source <span className="text-destructive">*</span>
+          Statement Source <span className="text-destructive">*</span>
         </label>
         <Select value={source} onValueChange={(val) => { setSource(val); setError(null); }} disabled={isPending || isPasswordRequired}>
           <SelectTrigger className="w-full sm:w-[300px]">

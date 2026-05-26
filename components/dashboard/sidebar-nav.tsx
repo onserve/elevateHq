@@ -31,7 +31,7 @@ const navigation = [
   },
   {
     id: 'document',
-    name: 'Documents',
+    name: 'Statements',
     icon: File,
     href: '/documents',
   },
