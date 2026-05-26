@@ -103,7 +103,7 @@ export function SidebarNav({ userRoles = [] }: { userRoles?: string[] }) {
   });
 
   return (
-    <nav className="flex-1 p-4 space-y-2">
+    <nav className="flex-1 overflow-y-auto p-4 space-y-2">
       {filteredNavigation.map((item) => {
         const Icon = item.icon;
 

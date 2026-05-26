@@ -8,5 +8,5 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ children, className }: DashboardShellProps) {
-  return <div className={cn('flex min-h-screen bg-background', className)}>{children}</div>;
+  return <div className={cn('flex h-screen overflow-hidden bg-background', className)}>{children}</div>;
 }
