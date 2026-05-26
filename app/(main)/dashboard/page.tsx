@@ -25,8 +25,8 @@ export default async function DashboardPage() {
       {/* KPI bar — Active Projects · Documents · Monthly Revenue */}
       <DashboardKpiBar />
 
-      {/* AI insight strip */}
-      <AiInsightBanner message={AI_INSIGHT.message} href={AI_INSIGHT.href} reviewLabel="Review" />
+      {/* AI insight strip
+      <AiInsightBanner message={AI_INSIGHT.message} href={AI_INSIGHT.href} reviewLabel="Review" /> */}
 
       {/* Two-panel content grid — Projects (left) + Documents (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

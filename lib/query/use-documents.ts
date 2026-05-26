@@ -46,10 +46,13 @@ export function useUploadDocument() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ file, source }: { file: File; source: string }) => {
+    mutationFn: ({ file, source, password }: { file: File; source: string; password?: string }) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('source', source);
+      if (password) {
+        formData.append('password', password);
+      }
       return uploadDocument(formData);
     },
     onSuccess: () => {

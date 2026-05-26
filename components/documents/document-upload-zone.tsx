@@ -2,15 +2,20 @@
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, CheckCircle2, Loader2 } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Loader2, Lock, X } from 'lucide-react';
 import { useUploadDocument } from '@/lib/query/use-documents';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 export function DocumentUploadZone() {
   const { mutate: uploadDocument, isPending } = useUploadDocument();
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<string>('');
+  
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+  const [password, setPassword] = useState('');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
@@ -25,11 +30,45 @@ export function DocumentUploadZone() {
       onSuccess: () => {
         setSource('');
       },
-      onError: () => {
-        setError("Upload failed. Please try again or use a supported file type.");
+      onError: (err: any) => {
+        const message = err?.message || '';
+        if (message.includes("Incorrect or missing PDF password")) {
+          setIsPasswordRequired(true);
+          setPendingFile(file);
+        } else {
+          setError("Upload failed. Please try again or use a supported file type.");
+        }
       }
     });
   }, [uploadDocument, source]);
+
+  const handlePasswordSubmit = () => {
+    if (!pendingFile || !password) return;
+    setError(null);
+    uploadDocument({ file: pendingFile, source, password }, {
+      onSuccess: () => {
+        setSource('');
+        setIsPasswordRequired(false);
+        setPendingFile(null);
+        setPassword('');
+      },
+      onError: (err: any) => {
+        const message = err?.message || '';
+        if (message.includes("Incorrect or missing PDF password")) {
+          setError("Incorrect password. Please try again.");
+        } else {
+          setError("Upload failed. Please try again or use a supported file type.");
+        }
+      }
+    });
+  };
+
+  const handleCancelPassword = () => {
+    setIsPasswordRequired(false);
+    setPendingFile(null);
+    setPassword('');
+    setError(null);
+  };
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
@@ -40,6 +79,7 @@ export function DocumentUploadZone() {
     },
     maxFiles: 1,
     noClick: true,
+    disabled: !source || isPending || isPasswordRequired,
   });
 
   return (
@@ -48,7 +88,7 @@ export function DocumentUploadZone() {
         <label className="text-sm font-medium leading-none">
           Document Source <span className="text-destructive">*</span>
         </label>
-        <Select value={source} onValueChange={(val) => { setSource(val); setError(null); }} disabled={isPending}>
+        <Select value={source} onValueChange={(val) => { setSource(val); setError(null); }} disabled={isPending || isPasswordRequired}>
           <SelectTrigger className="w-full sm:w-[300px]">
             <SelectValue placeholder="Select a source..." />
           </SelectTrigger>
@@ -62,28 +102,64 @@ export function DocumentUploadZone() {
 
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${!source ? 'opacity-60 cursor-not-allowed hover:border-border' : 'cursor-pointer'}
-          ${isDragActive ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50'}`}
+        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${(!source && !isPasswordRequired) ? 'opacity-60 cursor-not-allowed hover:border-border' : (isPasswordRequired ? 'border-border bg-card' : 'cursor-pointer hover:border-primary/50')}
+          ${isDragActive && !isPasswordRequired ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
       >
-        <input {...getInputProps()} disabled={!source || isPending} />
+        <input {...getInputProps()} />
 
-        <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-          {isPending ? (
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          ) : (
-            <UploadCloud className="w-8 h-8 text-primary" />
-          )}
-        </div>
+        {isPasswordRequired ? (
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <Lock className="w-8 h-8 text-amber-500" />
+            </div>
+            <h3 className="text-xl font-bold">Password Protected</h3>
+            <p className="text-muted-foreground text-sm">
+              The file <strong>{pendingFile?.name}</strong> is encrypted. Please enter the password to continue.
+            </p>
+            <div className="flex items-center gap-2 mt-4">
+              <Input 
+                type="password" 
+                placeholder="Enter document password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                disabled={isPending}
+                className="flex-1"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button variant="outline" onClick={handleCancelPassword} disabled={isPending}>
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordSubmit} disabled={isPending || !password} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Lock className="w-4 h-4 mr-2" />}
+                Unlock & Upload
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+              {isPending ? (
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              ) : (
+                <UploadCloud className="w-8 h-8 text-primary" />
+              )}
+            </div>
 
-        <h3 className="text-xl font-bold mb-2">
-          {isDragActive ? "Drop the file here..." : "Drop files here or click to upload"}
-        </h3>
-        <p className="text-muted-foreground mb-6">Supports PDF, PNG, and JPG files</p>
+            <h3 className="text-xl font-bold mb-2">
+              {isDragActive ? "Drop the file here..." : "Drop files here or click to upload"}
+            </h3>
+            <p className="text-muted-foreground mb-6">Supports PDF, PNG, and JPG files</p>
 
-        <Button onClick={(e) => { e.preventDefault(); open(); }} size="lg" disabled={isPending} className="bg-foreground text-background hover:bg-foreground/90">
-          <UploadCloud className="w-4 h-4 mr-2" />
-          Choose Files
-        </Button>
+            <Button onClick={(e) => { e.preventDefault(); open(); }} size="lg" disabled={isPending || !source} className="bg-foreground text-background hover:bg-foreground/90">
+              <UploadCloud className="w-4 h-4 mr-2" />
+              Choose Files
+            </Button>
+          </>
+        )}
 
         {error && <p className="text-destructive text-sm mt-4">{error}</p>}
       </div>
