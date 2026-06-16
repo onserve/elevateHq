@@ -55,7 +55,7 @@ export async function getRecentDocuments(params?: { page?: number; size?: number
   const queryParams = new URLSearchParams();
   if (params?.page !== undefined) queryParams.append('page', params.page.toString());
   if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-  
+
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
   const response = await serverApi.get<any>(`/documents${queryString}`);
   return response.data?.data || response.data;
@@ -67,14 +67,14 @@ export async function getDocumentDetails(id: string): Promise<DocumentRecord> {
 }
 
 export async function getExtractedTransactions(
-  documentId: string, 
+  documentId: string,
   params?: { page?: number; size?: number; selected?: boolean }
 ): Promise<PaginatedResponse<ExtractedTransaction>> {
   const queryParams = new URLSearchParams();
   if (params?.page !== undefined) queryParams.append('page', params.page.toString());
   if (params?.size !== undefined) queryParams.append('size', params.size.toString());
   if (params?.selected !== undefined) queryParams.append('selected', params.selected.toString());
-  
+
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
   const response = await serverApi.get<any>(`/documents/${documentId}/transactions${queryString}`);
   return response.data?.data || response.data;
