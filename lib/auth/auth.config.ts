@@ -1,6 +1,7 @@
 // auth.config.ts
 import Keycloak from 'next-auth/providers/keycloak';
 import type { NextAuthConfig } from 'next-auth';
+import { decodeJwt } from 'jose';
 
 /**
  * NextAuth Configuration
@@ -55,8 +56,67 @@ export default {
       // Subsequent calls — check if the access token has expired
       const now = Math.floor(Date.now() / 1000);
       if (token.expiresAt && now >= token.expiresAt) {
-        console.warn('[Auth] Access token expired, flagging session for invalidation');
-        return { ...token, error: 'AccessTokenExpired' as const };
+        // Try to refresh the access token using the refresh token
+        console.info('[Auth] Access token expired, attempting refresh');
+
+        async function refreshAccessToken(oldToken: any) {
+          console.log("🚀 ~ refreshAccessToken ~ oldToken:", oldToken)
+          try {
+              const claims = JSON.parse(atob(oldToken.accessToken.split('.')[1]));
+              console.log('claims.azp (authorized party):', claims.azp);
+              console.log(
+                'claims.resource_access keys:',
+                Object.keys(claims.resource_access || {}),
+              );
+            const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
+            const params = new URLSearchParams();
+            params.append('client_id', process.env.KEYCLOAK_CLIENT_ID!);
+            params.append('client_secret', process.env.KEYCLOAK_CLIENT_SECRET!);
+            params.append('grant_type', 'refresh_token');
+            params.append('refresh_token', oldToken.refreshToken);
+
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params,
+            });
+
+            if (!res.ok) throw new Error(`Refresh token request failed: ${res.status}`);
+
+            const data = await res.json();
+            const newAccessToken = data.access_token;
+            const newRefreshToken = data.refresh_token ?? oldToken.refreshToken;
+            const expiresIn = data.expires_in ?? 60 * 60; // fallback
+            const newExpiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+
+            // Try to decode roles from the refreshed access token
+            let roles: string[] = oldToken.roles ?? [];
+            try {
+              const decoded = decodeJwt(newAccessToken);
+              const realmRoles = (decoded as any).realm_access?.roles || [];
+              const clientRoles =
+                (decoded as any).resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles || [];
+              roles = [...new Set([...(realmRoles || []), ...(clientRoles || [])])];
+            } catch (e) {
+              console.warn('[Auth] Failed to decode refreshed access token for roles', e);
+            }
+
+            return {
+              ...oldToken,
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+              expiresAt: newExpiresAt,
+              roles,
+              error: undefined,
+            };
+          } catch (error) {
+            console.error('[Auth] Error refreshing access token', error);
+            return { ...oldToken, error: 'RefreshAccessTokenError' as const };
+          }
+        }
+
+        const refreshed = await refreshAccessToken(token as any);
+        return refreshed;
       }
 
       return token;
