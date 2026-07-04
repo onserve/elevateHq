@@ -6,7 +6,6 @@ import { LandingNav } from '@/components/landing/landing-nav';
 import { LandingHero } from '@/components/landing/landing-hero';
 import { LandingWorksWith } from '@/components/landing/landing-works-with';
 import { LandingAiDemo } from '@/components/landing/landing-ai-demo';
-import { LandingHowItWorks } from '@/components/landing/landing-how-it-works';
 import { LandingSocialProof } from '@/components/landing/landing-social-proof';
 import { LandingPersonas } from '@/components/landing/landing-personas';
 import { LandingProjects } from '@/components/landing/landing-projects';
@@ -34,7 +33,6 @@ export default async function HomePage() {
       <LandingHero />
       <LandingWorksWith />
       <LandingAiDemo />
-      <LandingHowItWorks />
       <LandingSocialProof />
       <LandingPersonas />
       <LandingProjects />
