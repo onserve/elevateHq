@@ -9,7 +9,6 @@ import { LandingAiDemo } from '@/components/landing/landing-ai-demo';
 import { LandingSocialProof } from '@/components/landing/landing-social-proof';
 import { LandingPersonas } from '@/components/landing/landing-personas';
 import { LandingProjects } from '@/components/landing/landing-projects';
-import { LandingGoalsTasks } from '@/components/landing/landing-goals-tasks';
 import { LandingFooter } from '@/components/landing/landing-footer';
 
 export const metadata: Metadata = {
@@ -36,7 +35,6 @@ export default async function HomePage() {
       <LandingSocialProof />
       <LandingPersonas />
       <LandingProjects />
-      <LandingGoalsTasks />
       <LandingFooter />
     </div>
   );

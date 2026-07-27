@@ -1,66 +1,58 @@
 /**
- * Simplified footer — Brand + Product columns only.
- * Removed: Security column, sitemap, large layout.
+ * Compact, single-row minimalist footer.
+ * Cut in half in terms of height, product links column removed,
+ * and includes a dedicated placeholder slot for developer portfolio website link.
  */
-
-const productLinks = [
-  'Document Extraction',
-  'Gmail Integration',
-  'AI Assistant',
-  'Projects',
-  'Goals & Tasks',
-];
 
 export function LandingFooter() {
   return (
-    <footer className="bg-slate-900 text-slate-400 py-10">
+    <footer className="bg-slate-900 text-slate-400 py-6 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-8">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="h-7 w-7 rounded-lg bg-emerald-600 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-white">
-                  <path
-                    d="M9 12h6M9 16h4M7 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-4H7Z"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M14 4v4h4"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-white">ElevateHQ</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          
+          {/* Left: Brand info */}
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-6 rounded-md bg-emerald-600 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 text-white">
+                <path
+                  d="M9 12h6M9 16h4M7 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-4H7Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M14 4v4h4"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
-              Financial intelligence for East Africa.<br />Built in Nairobi 🇰🇪
-            </p>
-          </div>
-
-          {/* Product links */}
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Product</p>
-            <div className="space-y-2">
-              {productLinks.map(l => (
-                <p key={l} className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-default">
-                  {l}
-                </p>
-              ))}
+            <div>
+              <span className="text-xs font-bold text-white block leading-none">ElevateHQ</span>
+              <span className="text-[10px] text-slate-500 block mt-0.5">Built in Nairobi 🇰🇪</span>
             </div>
           </div>
-        </div>
 
-        {/* Bottom bar */}
-        <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-slate-600">© {new Date().getFullYear()} ElevateHQ. All rights reserved.</p>
-          <p className="text-xs text-slate-600">Made with 💚 in Nairobi</p>
+          {/* Right: Credits & Portfolio Link placeholder */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+            <span className="text-slate-500">
+              © {new Date().getFullYear()} ElevateHQ. All rights reserved.
+            </span>
+            
+            {/* Portfolio Link placeholder */}
+            <a 
+              href="https://yourportfolio.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-emerald-500 hover:text-emerald-400 transition-colors font-medium border-l border-slate-800 pl-6"
+            >
+              Developer Portfolio →
+            </a>
+          </div>
+
         </div>
       </div>
     </footer>

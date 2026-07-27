@@ -173,7 +173,7 @@ export function LandingSocialProof() {
   }, [visibleCount, mounted, isHovered, maxIndex]);
 
   return (
-    <section className="py-24 bg-slate-50 border-y border-slate-100">
+    <section className="pt-20 pb-12 bg-slate-50 border-t border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -182,10 +182,10 @@ export function LandingSocialProof() {
             From real users
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            People who stopped guessing<br />and started knowing.
+            People who stopped guessing
           </h2>
           <p className="text-slate-500 max-w-md mx-auto text-sm">
-            Freelancers, business owners, and group treasurers across East Africa use
+            Freelancers, business owners, group treasurers and individuals use
             ElevateHQ to get clarity on their money — without the manual work.
           </p>
         </div>
