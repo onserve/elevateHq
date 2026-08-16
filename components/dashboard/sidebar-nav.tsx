@@ -92,7 +92,6 @@ const navigation = [
  * - Client-side routing = instant navigation
  */
 export function SidebarNav({ userRoles = [] }: { userRoles?: string[] }) {
-  console.log('user roles: ', userRoles)
   // Get current pathname - this hook requires "use client"
   const pathname = usePathname();
 
