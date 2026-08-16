@@ -101,14 +101,14 @@ export function RecentDocumentsList() {
   return (
     <div className="border border-border rounded-xl bg-card h-full flex flex-col min-h-[500px]">
       <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-bold">Recent Documents</h2>
+        <h2 className="text-xl font-bold">Recent Statements</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 h-full">
             <FileText className="h-10 w-10 mb-3 opacity-20" />
-            <p>No recent documents found.</p>
+            <p>No recent statements found.</p>
           </div>
         ) : (
           documents.map((doc) => {

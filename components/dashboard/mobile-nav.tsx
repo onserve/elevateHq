@@ -25,7 +25,7 @@ const mobileNav = [
   },
   {
     id: 'document',
-    name: 'Documents',
+    name: 'Statements',
     icon: File,
     href: '/documents',
   },

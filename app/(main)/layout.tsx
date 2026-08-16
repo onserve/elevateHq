@@ -90,7 +90,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
         - Takes remaining space (flex-1)
         - Contains header and page content
       */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* 
           Header
           - Shows on both mobile and desktop (different layouts)
@@ -105,7 +105,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           - Each page is also a Server Component by default
           - Can have its own loading.tsx and error.tsx
         */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
 
       {/* 

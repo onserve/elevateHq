@@ -24,7 +24,7 @@ export function useRecentDocuments(page = 0, size = 10) {
       const hasProcessing = data?.content?.some(
         (doc) => doc.status === 'PROCESSING' || doc.status === 'UPLOADED'
       );
-      return hasProcessing ? 3000 : false;
+      return hasProcessing ? 20000 : false;
     },
   });
 }
@@ -37,7 +37,7 @@ export function useDocument(id: string) {
     refetchInterval: (query) => {
       // Auto-refresh if the document is still processing
       const data = query.state.data as DocumentRecord | undefined;
-      return data?.status === 'PROCESSING' ? 2000 : false;
+      return data?.status === 'PROCESSING' ? 20000 : false;
     },
   });
 }
@@ -46,10 +46,13 @@ export function useUploadDocument() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ file, source }: { file: File; source: string }) => {
+    mutationFn: ({ file, source, password }: { file: File; source: string; password?: string }) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('source', source);
+      if (password) {
+        formData.append('password', password);
+      }
       return uploadDocument(formData);
     },
     onSuccess: () => {

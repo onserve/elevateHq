@@ -24,7 +24,7 @@ export function DashboardWelcomeHeader({ userName }: DashboardWelcomeHeaderProps
       );
     if (stats.processingDocuments > 0)
       parts.push(
-        `${stats.processingDocuments} document${stats.processingDocuments > 1 ? 's' : ''} waiting for review`
+        `${stats.processingDocuments} statement${stats.processingDocuments > 1 ? 's' : ''} waiting for review`
       );
     if (parts.length === 0) return "You're all caught up — great work!";
     return `You have ${parts.join(' and ')}.`;
@@ -42,8 +42,8 @@ export function DashboardWelcomeHeader({ userName }: DashboardWelcomeHeaderProps
           <div className="mt-2 h-4 w-64 bg-muted rounded animate-pulse" />
         ) : (
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {subtitle?.split(/([\d]+ projects?|[\d]+ documents?)/).map((part, i) =>
-              /[\d]+ (projects?|documents?)/.test(part) ? (
+            {subtitle?.split(/([\d]+ projects?|[\d]+ statements?)/).map((part, i) =>
+              /[\d]+ (projects?|statements?)/.test(part) ? (
                 <strong key={i} className="font-semibold text-foreground">
                   {part}
                 </strong>
