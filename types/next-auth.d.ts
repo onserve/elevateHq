@@ -19,7 +19,8 @@ declare module 'next-auth' {
   interface Session {
     accessToken?: string;
     expiresAt?: number;
-    error?: 'AccessTokenExpired';
+    /** Set when the Keycloak refresh token exchange fails, forcing re-authentication. */
+    error?: 'RefreshAccessTokenError';
     user: {
       id: string;
       roles?: string[];
@@ -47,6 +48,7 @@ declare module 'next-auth/jwt' {
     expiresAt?: number;
     id?: string | null | undefined;
     roles?: string[];
-    error?: 'AccessTokenExpired';
+    /** Set when the Keycloak refresh token exchange fails, forcing re-authentication. */
+    error?: 'RefreshAccessTokenError';
   }
 }

@@ -6,6 +6,7 @@ import {SessionProvider} from '@/components/providers/session-provider';
 import {QueryProvider} from '@/components/providers/query-provider';
 import { Toaster } from 'sonner';
 import "./globals.css";
+import { auth } from '@/lib/auth/auth';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +24,12 @@ export const metadata: Metadata = {
     'Connect Gmail or upload a PDF — ElevateHQ extracts every transaction automatically. Built for East Africa, works with any currency.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
@@ -37,7 +39,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
+          <SessionProvider session={session}>
             <QueryProvider>
               {children}
               <Toaster />

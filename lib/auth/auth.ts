@@ -6,11 +6,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
 
   pages: {
-    signIn: '/dashboard',   
-    signOut: '/', 
-    // error: '/auth/error',
-    // verifyRequest: '/auth/verify-request',
-    // newUser: '/auth/new-user'
+    signIn: '/',     // Redirect unauthenticated users to home page where sign in button is
+    signOut: '/',
+    error: '/auth/error',
   },
   ...authConfig,
 })

@@ -137,8 +137,8 @@ export class ServerApiClient {
     if (!response.ok) {
 
       if (response.status === 401) {
-        console.log('[API Client] 401 from backend, redirecting to signout');
-        redirect('/api/auth/signout?callbackUrl=/');
+        console.log('[API Client] 401 from backend, redirecting to /');
+        redirect('/');
       }
 
       const errorMessage =
