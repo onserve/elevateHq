@@ -3,7 +3,8 @@ import { NextResponse} from 'next/server';
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
-  const publicPaths = ['/'];
+  // /auth/error must be public, otherwise a failed sign-in is bounced to / with no explanation.
+  const publicPaths = ['/', '/auth/error'];
 
   if (publicPaths.includes(pathname)) return NextResponse.next();
 
