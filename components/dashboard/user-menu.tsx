@@ -1,8 +1,8 @@
 // components/dashboard/user-menu.tsx
 'use client';
 
-import { useState } from 'react';
-import { signOut } from 'next-auth/react';
+import { startTransition, useState } from 'react';
+import { signOutAction } from '@/lib/auth/actions';
 import { LogOut, User, Settings, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -63,12 +63,15 @@ export function UserMenu({ name, email, image, userRoles = [] }: UserMenuProps) 
   /**
    * Handle sign out
    * - Set loading state (disable button, show loading text)
-   * - Call NextAuth signOut()
+   * - Run the signOutAction server action (clears the app session and ends
+   *   the Keycloak session)
    * - Redirect to home page
    */
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     setIsLoading(true);
-    await signOut({ callbackUrl: '/' });
+    startTransition(async () => {
+      await signOutAction();
+    });
     // Note: setIsLoading(false) not needed - user will be redirected
   };
 
