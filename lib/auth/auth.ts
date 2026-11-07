@@ -17,7 +17,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
 
   pages: {
-    signIn: '/',     // Redirect unauthenticated users to home page where sign in button is
+    signIn: '/sign-in', // Sign-in page with the Google and email/password options
     signOut: '/',
     error: '/auth/error',
   },

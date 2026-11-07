@@ -14,7 +14,18 @@ import { signIn, signOut } from '@/lib/auth/auth';
  * the redirect target is fixed here instead of being supplied by the caller.
  */
 export async function signInAction() {
+  // No hint: Keycloak shows its own login page (email and password).
   await signIn('keycloak', { redirectTo: '/dashboard' });
+}
+
+/**
+ * Google sign-in. `kc_idp_hint` names the Google identity provider alias in
+ * Keycloak, so Keycloak skips its login page and redirects straight to Google.
+ * If the alias doesn't exist in the realm, Keycloak ignores the hint and shows
+ * its normal login page.
+ */
+export async function signInWithGoogleAction() {
+  await signIn('keycloak', { redirectTo: '/dashboard' }, { kc_idp_hint: 'google' });
 }
 
 /**
