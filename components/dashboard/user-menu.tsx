@@ -1,7 +1,7 @@
 // components/dashboard/user-menu.tsx
 'use client';
 
-import { startTransition, useState } from 'react';
+import { useTransition } from 'react';
 import { signOutAction } from '@/lib/auth/actions';
 import { LogOut, User, Settings, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,6 +20,8 @@ interface UserMenuProps {
   email: string;
   image?: string | null;
   userRoles?: string[];
+  /** `sidebar`: full row with name and email. `compact`: avatar only, for the mobile header. */
+  variant?: 'sidebar' | 'compact';
 }
 
 /**
@@ -43,9 +45,9 @@ interface UserMenuProps {
  *   → passes to Sidebar
  *   → passes to UserMenu as props
  */
-export function UserMenu({ name, email, image, userRoles = [] }: UserMenuProps) {
-  // Local state for loading indicator
-  const [isLoading, setIsLoading] = useState(false);
+export function UserMenu({ name, email, image, userRoles = [], variant = 'sidebar' }: UserMenuProps) {
+  // Pending while the sign-out action runs; resets by itself if the action fails.
+  const [isSigningOut, startSignOut] = useTransition();
 
   /**
    * Generate user initials from name
@@ -62,46 +64,61 @@ export function UserMenu({ name, email, image, userRoles = [] }: UserMenuProps) 
 
   /**
    * Handle sign out
-   * - Set loading state (disable button, show loading text)
+   * - Keep the menu open (preventDefault on select) so "Signing out..." stays
+   *   visible; the action can take a few seconds while Keycloak is called
    * - Run the signOutAction server action (clears the app session and ends
-   *   the Keycloak session)
-   * - Redirect to home page
+   *   the Keycloak session), which redirects to the home page
    */
-  const handleSignOut = () => {
-    setIsLoading(true);
-    startTransition(async () => {
+  const handleSignOut = (event: Event) => {
+    event.preventDefault();
+    if (isSigningOut) return;
+    startSignOut(async () => {
       await signOutAction();
     });
-    // Note: setIsLoading(false) not needed - user will be redirected
   };
 
+  const avatar = (
+    <Avatar className="h-8 w-8">
+      {/* Try to load user's profile image */}
+      <AvatarImage src={image || undefined} alt={name} />
+
+      {/* Fallback to initials if no image */}
+      <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
+        {getUserInitials()}
+      </AvatarFallback>
+    </Avatar>
+  );
+
   return (
-    <div className="p-4 border-t border-sidebar-border">
+    <div className={variant === 'sidebar' ? 'p-4 border-t border-sidebar-border' : undefined}>
       <DropdownMenu>
-        {/* Trigger - shows user avatar and info */}
+        {/* Trigger - shows user avatar (and info in the sidebar variant) */}
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-2">
-            <Avatar className="h-8 w-8">
-              {/* Try to load user's profile image */}
-              <AvatarImage src={image || undefined} alt={name} />
+          {variant === 'sidebar' ? (
+            <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-2">
+              {avatar}
 
-              {/* Fallback to initials if no image */}
-              <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
-                {getUserInitials()}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* User info */}
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{name}</p>
-              <p className="text-xs text-sidebar-foreground/60 truncate">{email}</p>
-            </div>
-          </Button>
+              {/* User info */}
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{name}</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">{email}</p>
+              </div>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" className="rounded-full" aria-label="Account menu">
+              {avatar}
+            </Button>
+          )}
         </DropdownMenuTrigger>
 
         {/* Dropdown content */}
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>
+            My Account
+            {variant === 'compact' && (
+              <span className="block text-xs font-normal text-muted-foreground truncate">{email}</span>
+            )}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
           <DropdownMenuItem>
@@ -134,9 +151,9 @@ export function UserMenu({ name, email, image, userRoles = [] }: UserMenuProps) 
             <DropdownMenuSeparator />
           )}
 
-          <DropdownMenuItem onClick={handleSignOut} disabled={isLoading}>
+          <DropdownMenuItem onSelect={handleSignOut} aria-disabled={isSigningOut}>
             <LogOut className="mr-2 h-4 w-4" />
-            {isLoading ? 'Signing out...' : 'Sign out'}
+            {isSigningOut ? 'Signing out...' : 'Sign out'}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

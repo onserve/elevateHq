@@ -5,11 +5,12 @@ interface BtnProps {
   label?: string;
 }
 
-// Both entry points go to /sign-in, which offers Google and email/password.
+// "Get started" goes to /sign-up (registration); "Sign in" goes to /sign-in.
+// Both pages offer Google and email.
 export function GetStartedButton({ className = '', label = 'Get started free' }: BtnProps) {
   return (
     <Link
-      href="/sign-in"
+      href="/sign-up"
       className={`inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-6 h-12 rounded-xl transition-all text-sm shadow-sm hover:shadow-emerald-200 hover:shadow-md ${className}`}
     >
       {label}

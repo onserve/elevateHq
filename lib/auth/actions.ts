@@ -19,10 +19,22 @@ export async function signInAction() {
 }
 
 /**
- * Google sign-in. `kc_idp_hint` names the Google identity provider alias in
+ * Email sign-up. `prompt=create` (OIDC "initiating user registration") makes
+ * Keycloak open its registration form instead of the login form, so new users
+ * don't have to find the small "Register" link. Requires user registration to
+ * be enabled in the realm; the realm advertises `create` in
+ * `prompt_values_supported` when it is.
+ */
+export async function signUpAction() {
+  await signIn('keycloak', { redirectTo: '/dashboard' }, { prompt: 'create' });
+}
+
+/**
+ * Google sign-in and sign-up. `kc_idp_hint` names the Google identity provider alias in
  * Keycloak, so Keycloak skips its login page and redirects straight to Google.
  * If the alias doesn't exist in the realm, Keycloak ignores the hint and shows
- * its normal login page.
+ * its normal login page. A first-time Google user gets a Keycloak account
+ * created by the first-broker-login flow, so this also serves as sign-up.
  */
 export async function signInWithGoogleAction() {
   await signIn('keycloak', { redirectTo: '/dashboard' }, { kc_idp_hint: 'google' });

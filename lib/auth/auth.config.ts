@@ -247,7 +247,7 @@ export default {
       const { pathname } = request.nextUrl;
 
       // Public routes - anyone can access
-      const publicRoutes = ['/', '/about', '/auth/error', '/auth/signup', '/sign-in'];
+      const publicRoutes = ['/', '/about', '/auth/error', '/sign-up', '/sign-in'];
       if (publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
         return true;
       }
