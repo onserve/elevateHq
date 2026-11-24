@@ -1,5 +1,5 @@
 // lib/api/server-api-client.ts
-import { auth, signOut} from '@/lib/auth/auth';
+import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
 import { isRedirectError } from 'next/dist/client/components/redirect-error'; // ✅ Next.js utility
 

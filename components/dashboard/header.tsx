@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationBell } from './notification-bell';
 import { AiAssistantMobileTrigger } from '@/components/agent/ai-assistant-float';
+import { UserMenu } from './user-menu';
 
 interface DashboardHeaderProps {
   session: Session;
@@ -41,6 +42,14 @@ export async function DashboardHeader({ session }: DashboardHeaderProps) {
         <div className="flex items-center gap-2">
           <AiAssistantMobileTrigger />
           <NotificationBell />
+          {/* The sidebar (with its user menu) is hidden below lg, so mobile needs its own way to sign out. */}
+          <UserMenu
+            variant="compact"
+            name={session.user.name || 'User'}
+            email={session.user.email || ''}
+            image={session.user.image}
+            userRoles={session.user.roles ?? []}
+          />
         </div>
       </div>
 
